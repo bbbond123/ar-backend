@@ -4,12 +4,16 @@
 // @BasePath /api/v1
 package main
 
-import "fmt"
+import (
+	"ar-backend/internal/router"
 
-// @title Travel AR API
-// @version 1.0
-// @description API for Travel AR Project
-// @BasePath /api/v1
+	"github.com/gin-gonic/gin"
+)
+
 func main() {
-	fmt.Println("Starting server...")
+	r := gin.Default()
+
+	router.SetupRouter(r)
+
+	r.Run(":8080")
 }
