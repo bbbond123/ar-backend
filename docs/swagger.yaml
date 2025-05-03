@@ -1,0 +1,18 @@
+basePath: /api/v1
+info:
+  contact: {}
+  description: API for ar-backend
+  title: My API
+  version: "1.0"
+paths:
+  /ping:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: pong
+          schema:
+            type: string
+      summary: Ping API
+swagger: "2.0"
