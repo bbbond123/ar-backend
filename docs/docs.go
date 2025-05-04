@@ -14,7 +14,426 @@ const docTemplate = `{
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
-    "paths": {}
+    "paths": {
+        "/api/facilities": {
+            "post": {
+                "description": "新增一个设施记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Facilities"
+                ],
+                "summary": "新建设施",
+                "parameters": [
+                    {
+                        "description": "设施信息",
+                        "name": "facility",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.FacilityCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response-model_Facility"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/facilities/list": {
+            "post": {
+                "description": "获取设施列表（分页 + 搜索）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Facilities"
+                ],
+                "summary": "获取设施列表",
+                "parameters": [
+                    {
+                        "description": "分页与搜索",
+                        "name": "query",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.FacilityQueryRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.ListResponse-model_Facility"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/facilities/{id}": {
+            "get": {
+                "description": "通过ID获取设施详情",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Facilities"
+                ],
+                "summary": "获取单个设施",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "设施ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response-model_Facility"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新指定ID的设施",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Facilities"
+                ],
+                "summary": "更新设施",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "设施ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "设施信息",
+                        "name": "facility",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.FacilityUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response-model_Facility"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除指定ID的设施",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Facilities"
+                ],
+                "summary": "删除设施",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "设施ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "model.BaseResponse": {
+            "type": "object",
+            "properties": {
+                "errCode": {
+                    "description": "错误码",
+                    "type": "string"
+                },
+                "errMessage": {
+                    "description": "错误信息",
+                    "type": "string"
+                },
+                "success": {
+                    "description": "请求是否成功",
+                    "type": "boolean"
+                }
+            }
+        },
+        "model.Facility": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "description": "设施描述",
+                    "type": "string"
+                },
+                "facility_id": {
+                    "description": "设施ID",
+                    "type": "integer"
+                },
+                "facility_name": {
+                    "description": "设施名",
+                    "type": "string"
+                },
+                "latitude": {
+                    "description": "纬度",
+                    "type": "number"
+                },
+                "location": {
+                    "description": "所在地",
+                    "type": "string"
+                },
+                "longitude": {
+                    "description": "经度",
+                    "type": "number"
+                },
+                "person_id": {
+                    "description": "相关人物ID（可选）",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.FacilityCreateRequest": {
+            "type": "object",
+            "required": [
+                "facility_name",
+                "latitude",
+                "location",
+                "longitude"
+            ],
+            "properties": {
+                "description": {
+                    "description": "描述",
+                    "type": "string"
+                },
+                "facility_name": {
+                    "description": "设施名",
+                    "type": "string"
+                },
+                "latitude": {
+                    "description": "纬度",
+                    "type": "number"
+                },
+                "location": {
+                    "description": "所在地",
+                    "type": "string"
+                },
+                "longitude": {
+                    "description": "经度",
+                    "type": "number"
+                },
+                "person_id": {
+                    "description": "相关人物ID（可选）",
+                    "type": "integer"
+                }
+            }
+        },
+        "model.FacilityQueryRequest": {
+            "type": "object",
+            "required": [
+                "page",
+                "page_size"
+            ],
+            "properties": {
+                "keyword": {
+                    "description": "关键字（设施名模糊搜索）",
+                    "type": "string"
+                },
+                "page": {
+                    "description": "页码",
+                    "type": "integer"
+                },
+                "page_size": {
+                    "description": "每页数量",
+                    "type": "integer"
+                }
+            }
+        },
+        "model.FacilityUpdateRequest": {
+            "type": "object",
+            "required": [
+                "facility_id",
+                "facility_name",
+                "latitude",
+                "location",
+                "longitude"
+            ],
+            "properties": {
+                "description": {
+                    "description": "描述",
+                    "type": "string"
+                },
+                "facility_id": {
+                    "description": "设施ID",
+                    "type": "integer"
+                },
+                "facility_name": {
+                    "description": "设施名",
+                    "type": "string"
+                },
+                "latitude": {
+                    "description": "纬度",
+                    "type": "number"
+                },
+                "location": {
+                    "description": "所在地",
+                    "type": "string"
+                },
+                "longitude": {
+                    "description": "经度",
+                    "type": "number"
+                },
+                "person_id": {
+                    "description": "相关人物ID（可选）",
+                    "type": "integer"
+                }
+            }
+        },
+        "model.ListResponse-model_Facility": {
+            "type": "object",
+            "properties": {
+                "errCode": {
+                    "description": "错误码",
+                    "type": "string"
+                },
+                "errMessage": {
+                    "description": "错误信息",
+                    "type": "string"
+                },
+                "list": {
+                    "description": "列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Facility"
+                    }
+                },
+                "success": {
+                    "description": "请求是否成功",
+                    "type": "boolean"
+                },
+                "total": {
+                    "description": "总条数",
+                    "type": "integer"
+                }
+            }
+        },
+        "model.Response-model_Facility": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.Facility"
+                        }
+                    ]
+                },
+                "errCode": {
+                    "description": "错误码",
+                    "type": "string"
+                },
+                "errMessage": {
+                    "description": "错误信息",
+                    "type": "string"
+                },
+                "success": {
+                    "description": "请求是否成功",
+                    "type": "boolean"
+                }
+            }
+        }
+    }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it

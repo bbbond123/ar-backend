@@ -1,4 +1,291 @@
+definitions:
+  model.BaseResponse:
+    properties:
+      errCode:
+        description: 错误码
+        type: string
+      errMessage:
+        description: 错误信息
+        type: string
+      success:
+        description: 请求是否成功
+        type: boolean
+    type: object
+  model.Facility:
+    properties:
+      created_at:
+        type: string
+      description:
+        description: 设施描述
+        type: string
+      facility_id:
+        description: 设施ID
+        type: integer
+      facility_name:
+        description: 设施名
+        type: string
+      latitude:
+        description: 纬度
+        type: number
+      location:
+        description: 所在地
+        type: string
+      longitude:
+        description: 经度
+        type: number
+      person_id:
+        description: 相关人物ID（可选）
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  model.FacilityCreateRequest:
+    properties:
+      description:
+        description: 描述
+        type: string
+      facility_name:
+        description: 设施名
+        type: string
+      latitude:
+        description: 纬度
+        type: number
+      location:
+        description: 所在地
+        type: string
+      longitude:
+        description: 经度
+        type: number
+      person_id:
+        description: 相关人物ID（可选）
+        type: integer
+    required:
+    - facility_name
+    - latitude
+    - location
+    - longitude
+    type: object
+  model.FacilityQueryRequest:
+    properties:
+      keyword:
+        description: 关键字（设施名模糊搜索）
+        type: string
+      page:
+        description: 页码
+        type: integer
+      page_size:
+        description: 每页数量
+        type: integer
+    required:
+    - page
+    - page_size
+    type: object
+  model.FacilityUpdateRequest:
+    properties:
+      description:
+        description: 描述
+        type: string
+      facility_id:
+        description: 设施ID
+        type: integer
+      facility_name:
+        description: 设施名
+        type: string
+      latitude:
+        description: 纬度
+        type: number
+      location:
+        description: 所在地
+        type: string
+      longitude:
+        description: 经度
+        type: number
+      person_id:
+        description: 相关人物ID（可选）
+        type: integer
+    required:
+    - facility_id
+    - facility_name
+    - latitude
+    - location
+    - longitude
+    type: object
+  model.ListResponse-model_Facility:
+    properties:
+      errCode:
+        description: 错误码
+        type: string
+      errMessage:
+        description: 错误信息
+        type: string
+      list:
+        description: 列表
+        items:
+          $ref: '#/definitions/model.Facility'
+        type: array
+      success:
+        description: 请求是否成功
+        type: boolean
+      total:
+        description: 总条数
+        type: integer
+    type: object
+  model.Response-model_Facility:
+    properties:
+      data:
+        allOf:
+        - $ref: '#/definitions/model.Facility'
+        description: 数据
+      errCode:
+        description: 错误码
+        type: string
+      errMessage:
+        description: 错误信息
+        type: string
+      success:
+        description: 请求是否成功
+        type: boolean
+    type: object
 info:
   contact: {}
-paths: {}
+paths:
+  /api/facilities:
+    post:
+      consumes:
+      - application/json
+      description: 新增一个设施记录
+      parameters:
+      - description: 设施信息
+        in: body
+        name: facility
+        required: true
+        schema:
+          $ref: '#/definitions/model.FacilityCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response-model_Facility'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 新建设施
+      tags:
+      - Facilities
+  /api/facilities/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定ID的设施
+      parameters:
+      - description: 设施ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 删除设施
+      tags:
+      - Facilities
+    get:
+      consumes:
+      - application/json
+      description: 通过ID获取设施详情
+      parameters:
+      - description: 设施ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response-model_Facility'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 获取单个设施
+      tags:
+      - Facilities
+    put:
+      consumes:
+      - application/json
+      description: 更新指定ID的设施
+      parameters:
+      - description: 设施ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 设施信息
+        in: body
+        name: facility
+        required: true
+        schema:
+          $ref: '#/definitions/model.FacilityUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response-model_Facility'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 更新设施
+      tags:
+      - Facilities
+  /api/facilities/list:
+    post:
+      consumes:
+      - application/json
+      description: 获取设施列表（分页 + 搜索）
+      parameters:
+      - description: 分页与搜索
+        in: body
+        name: query
+        required: true
+        schema:
+          $ref: '#/definitions/model.FacilityQueryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ListResponse-model_Facility'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 获取设施列表
+      tags:
+      - Facilities
 swagger: "2.0"

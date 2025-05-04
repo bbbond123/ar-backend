@@ -18,7 +18,7 @@ import (
 // @Success 200 {object} model.Response[model.Facility]
 // @Failure 400 {object} model.BaseResponse
 // @Failure 500 {object} model.BaseResponse
-// @Router /facilities [post]
+// @Router /api/facilities [post]
 func CreateFacility(c *gin.Context) {
 	var req model.FacilityCreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -28,12 +28,12 @@ func CreateFacility(c *gin.Context) {
 
 	db := database.GetDB()
 	facility := model.Facility{
-		FacilityName: req.FacilityName,
-		Location:     req.Location,
-		Description:  req.Description,
-		Latitude:     req.Latitude,
-		Longitude:    req.Longitude,
-		PersonID:     req.PersonID,
+		FacilityName:    req.FacilityName,
+		Location:        req.Location,
+		DescriptionText: req.DescriptionText,
+		Latitude:        req.Latitude,
+		Longitude:       req.Longitude,
+		PersonID:        req.PersonID,
 	}
 
 	if err := db.Create(&facility).Error; err != nil {
@@ -55,7 +55,7 @@ func CreateFacility(c *gin.Context) {
 // @Success 200 {object} model.Response[model.Facility]
 // @Failure 400 {object} model.BaseResponse
 // @Failure 404 {object} model.BaseResponse
-// @Router /facilities/{id} [put]
+// @Router /api/facilities/{id} [put]
 func UpdateFacility(c *gin.Context) {
 	id := c.Param("id")
 	db := database.GetDB()
@@ -73,7 +73,7 @@ func UpdateFacility(c *gin.Context) {
 
 	facility.FacilityName = req.FacilityName
 	facility.Location = req.Location
-	facility.Description = req.Description
+	facility.DescriptionText = req.DescriptionText
 	facility.Latitude = req.Latitude
 	facility.Longitude = req.Longitude
 	facility.PersonID = req.PersonID
@@ -91,7 +91,7 @@ func UpdateFacility(c *gin.Context) {
 // @Param id path int true "设施ID"
 // @Success 200 {object} model.BaseResponse
 // @Failure 500 {object} model.BaseResponse
-// @Router /facilities/{id} [delete]
+// @Router /api/facilities/{id} [delete]
 func DeleteFacility(c *gin.Context) {
 	id := c.Param("id")
 	db := database.GetDB()
@@ -111,7 +111,7 @@ func DeleteFacility(c *gin.Context) {
 // @Param id path int true "设施ID"
 // @Success 200 {object} model.Response[model.Facility]
 // @Failure 404 {object} model.BaseResponse
-// @Router /facilities/{id} [get]
+// @Router /api/facilities/{id} [get]
 func GetFacility(c *gin.Context) {
 	id := c.Param("id")
 	db := database.GetDB()
@@ -132,7 +132,7 @@ func GetFacility(c *gin.Context) {
 // @Param query body model.FacilityQueryRequest true "分页与搜索"
 // @Success 200 {object} model.ListResponse[model.Facility]
 // @Failure 400 {object} model.BaseResponse
-// @Router /facilities/list [post]
+// @Router /api/facilities/list [post]
 func ListFacilities(c *gin.Context) {
 	var query model.FacilityQueryRequest
 	if err := c.ShouldBindJSON(&query); err != nil {
