@@ -40,3 +40,13 @@ func ConnectDatabase() {
 func GetDB() *gorm.DB {
 	return DB
 }
+
+func InitDB() error {
+	dsn := "host=localhost user=myuser password=mypassword dbname=mydatabase port=5432 sslmode=disable"
+	var err error
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return err
+	}
+	return nil
+}

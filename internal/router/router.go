@@ -8,4 +8,5 @@ import (
 
 func SetupRouter(r *gin.Engine) {
 	r.GET("/ping", controller.Ping)
+	r.GET("/test/db", controller.TestDB)
 }
