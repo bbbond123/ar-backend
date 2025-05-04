@@ -1,1 +1,42 @@
 .DS_Store
+# Binaries and compiled output
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/tmp/*
+/bin/*
+/build/*
+main
+
+# Dependency directories (managed by Go modules)
+/vendor/
+
+# Go test and coverage files
+*.test
+*.out
+*.prof
+coverage.*
+
+# Go workspace file
+go.work
+
+# Editor and IDE files
+.idea/
+*.swp
+*.swo
+.vscode/
+*.code-workspace
+
+# Logs and temporary files
+*.log
+*.tmp
+/logs/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Environment files (if they contain sensitive data)
+.env
