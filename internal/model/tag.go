@@ -1,18 +1,32 @@
 package model
 
-import (
-	"time"
-)
+import "time"
 
-// Facility 表示数据库中的 facilities 表
+// Tag 表示 tags 表
 type Tag struct {
-	FacilityID      int       `gorm:"column:facility_id;primaryKey"`                        // 施設ID: 主键
-	FacilityName    string    `gorm:"column:facility_name;type:varchar(255);not null"`      // 施設名（全角）
-	Location        string    `gorm:"column:location;type:varchar(255);not null"`           // 所在地（全角）
-	DescriptionText string    `gorm:"column:description_text;type:text"`                    // 説明（全角）
-	Latitude        float64   `gorm:"column:latitude;type:decimal(10,6);not null"`          // 緯度
-	Longitude       float64   `gorm:"column:longitude;type:decimal(10,6);not null"`         // 経度
-	PersonID        *int      `gorm:"column:person_id"`                                     // 関連人物ID（允许为NULL）
-	CreatedAt       time.Time `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP"` // 作成日
-	UpdatedAt       time.Time `gorm:"column:updated_at;not null;default:CURRENT_TIMESTAMP"` // 更新日
+	TagID     int        `gorm:"column:tag_id;primaryKey" json:"tag_id"`
+	TagName   string     `gorm:"column:tag_name;type:varchar(50);not null" json:"tag_name"`
+	IsActive  bool       `gorm:"column:is_active;not null;default:true" json:"is_active"`
+	CreatedAt time.Time  `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt *time.Time `gorm:"column:updated_at" json:"updated_at"`
+}
+
+// TagReqCreate 创建Tag请求
+type TagReqCreate struct {
+	TagName  string `json:"tag_name" binding:"required"`
+	IsActive bool   `json:"is_active"`
+}
+
+// TagReqEdit 更新Tag请求
+type TagReqEdit struct {
+	TagID    int    `json:"tag_id" binding:"required"`
+	TagName  string `json:"tag_name"`
+	IsActive bool   `json:"is_active"`
+}
+
+// TagReqList Tag分页请求
+type TagReqList struct {
+	Page     int    `json:"page" binding:"required"`
+	PageSize int    `json:"page_size" binding:"required"`
+	Keyword  string `json:"keyword"`
 }

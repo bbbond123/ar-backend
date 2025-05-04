@@ -1,18 +1,43 @@
 package model
 
-import (
-	"time"
-)
+import "time"
 
-// Facility 表示数据库中的 facilities 表
+// VisitHistory 表示数据库中的 visit_history 表
 type VisitHistory struct {
-	FacilityID      int       `gorm:"column:facility_id;primaryKey"`                        // 施設ID: 主键
-	FacilityName    string    `gorm:"column:facility_name;type:varchar(255);not null"`      // 施設名（全角）
-	Location        string    `gorm:"column:location;type:varchar(255);not null"`           // 所在地（全角）
-	DescriptionText string    `gorm:"column:description_text;type:text"`                    // 説明（全角）
-	Latitude        float64   `gorm:"column:latitude;type:decimal(10,6);not null"`          // 緯度
-	Longitude       float64   `gorm:"column:longitude;type:decimal(10,6);not null"`         // 経度
-	PersonID        *int      `gorm:"column:person_id"`                                     // 関連人物ID（允许为NULL）
-	CreatedAt       time.Time `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP"` // 作成日
-	UpdatedAt       time.Time `gorm:"column:updated_at;not null;default:CURRENT_TIMESTAMP"` // 更新日
+	HistoryID  int        `gorm:"column:history_id;primaryKey" json:"history_id"`
+	UserID     int        `gorm:"column:user_id;not null" json:"user_id"`
+	FacilityID int        `gorm:"column:facility_id;not null" json:"facility_id"`
+	ScanAt     time.Time  `gorm:"column:scan_at;not null" json:"scan_at"`
+	IsActive   bool       `gorm:"column:is_active;not null;default:true" json:"is_active"`
+	CreatedAt  time.Time  `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt  *time.Time `gorm:"column:updated_at" json:"updated_at"`
+}
+
+// VisitHistoryReqCreate 新建访问记录请求
+type VisitHistoryReqCreate struct {
+	UserID     int       `json:"user_id" binding:"required"`
+	FacilityID int       `json:"facility_id" binding:"required"`
+	ScanAt     time.Time `json:"scan_at" binding:"required"`
+	IsActive   bool      `json:"is_active" binding:"required"`
+}
+
+// VisitHistoryReqEdit 更新访问记录请求
+type VisitHistoryReqEdit struct {
+	HistoryID  int       `json:"history_id" binding:"required"`
+	UserID     int       `json:"user_id"`
+	FacilityID int       `json:"facility_id"`
+	ScanAt     time.Time `json:"scan_at"`
+	IsActive   bool      `json:"is_active"`
+}
+
+// VisitHistoryReqList 访问记录分页与搜索请求
+type VisitHistoryReqList struct {
+	Page     int    `json:"page" binding:"required"`
+	PageSize int    `json:"page_size" binding:"required"`
+	Keyword  string `json:"keyword"`
+}
+
+// VisitHistoryDetailRequest 获取单个访问记录请求
+type VisitHistoryDetailRequest struct {
+	HistoryID int `json:"history_id" binding:"required"`
 }
