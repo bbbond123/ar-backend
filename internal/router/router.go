@@ -12,6 +12,7 @@ func InitRouter() *gin.Engine {
 	api := r.Group("/api")
 	{
 		RegisterFacilityRoutes(api) // 注册设施路由
+		RegisterUsersRoutes(api)
 	}
 
 	return r
