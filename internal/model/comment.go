@@ -1,18 +1,44 @@
 package model
 
-import (
-	"time"
-)
+import "time"
 
-// Facility 表示数据库中的 facilities 表
+// Comment 表示数据库中的 comments 表
 type Comment struct {
-	FacilityID      int       `gorm:"column:facility_id;primaryKey"`                        // 施設ID: 主键
-	FacilityName    string    `gorm:"column:facility_name;type:varchar(255);not null"`      // 施設名（全角）
-	Location        string    `gorm:"column:location;type:varchar(255);not null"`           // 所在地（全角）
-	DescriptionText string    `gorm:"column:description_text;type:text"`                    // 説明（全角）
-	Latitude        float64   `gorm:"column:latitude;type:decimal(10,6);not null"`          // 緯度
-	Longitude       float64   `gorm:"column:longitude;type:decimal(10,6);not null"`         // 経度
-	PersonID        *int      `gorm:"column:person_id"`                                     // 関連人物ID（允许为NULL）
-	CreatedAt       time.Time `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP"` // 作成日
-	UpdatedAt       time.Time `gorm:"column:updated_at;not null;default:CURRENT_TIMESTAMP"` // 更新日
+	CommentID        int        `gorm:"column:comment_id;primaryKey" json:"comment_id"`
+	ArticleID        int        `gorm:"column:article_id;not null" json:"article_id"`
+	UserID           int        `gorm:"column:user_id;not null" json:"user_id"`
+	CommentText      string     `gorm:"column:comment_text;type:text;not null" json:"comment_text"`
+	CreatedAt        time.Time  `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt        *time.Time `gorm:"column:updated_at" json:"updated_at"`
+	IsPublished      bool       `gorm:"column:is_published;not null" json:"is_published"`
+	ReplyToCommentID *int       `gorm:"column:reply_to_comment_id" json:"reply_to_comment_id"`
+}
+
+// CommentReqCreate 新建评论请求
+type CommentReqCreate struct {
+	ArticleID        int    `json:"article_id" binding:"required"`
+	UserID           int    `json:"user_id" binding:"required"`
+	CommentText      string `json:"comment_text" binding:"required"`
+	IsPublished      bool   `json:"is_published" binding:"required"`
+	ReplyToCommentID *int   `json:"reply_to_comment_id"`
+}
+
+// CommentReqEdit 更新评论请求
+type CommentReqEdit struct {
+	CommentID        int    `json:"comment_id" binding:"required"`
+	CommentText      string `json:"comment_text"`
+	IsPublished      bool   `json:"is_published"`
+	ReplyToCommentID *int   `json:"reply_to_comment_id"`
+}
+
+// CommentReqList 评论分页与搜索请求
+type CommentReqList struct {
+	Page     int    `json:"page" binding:"required"`
+	PageSize int    `json:"page_size" binding:"required"`
+	Keyword  string `json:"keyword"`
+}
+
+// CommentDetailRequest 获取单个评论请求
+type CommentDetailRequest struct {
+	CommentID int `json:"comment_id" binding:"required"`
 }
