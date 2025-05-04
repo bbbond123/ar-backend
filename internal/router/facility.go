@@ -6,14 +6,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RegisterFacilityRoutes 注册设施相关路由
-func RegisterFacilityRoutes(r *gin.RouterGroup) {
+// FacilityRouter 设施路由模块
+type FacilityRouter struct{}
+
+// Register 注册设施路由
+func (FacilityRouter) Register(r *gin.RouterGroup) {
 	facility := r.Group("/facilities")
 	{
-		facility.POST("", controller.CreateFacility)      // 新建
-		facility.PUT(":id", controller.UpdateFacility)    // 更新
-		facility.DELETE(":id", controller.DeleteFacility) // 删除
-		facility.GET(":id", controller.GetFacility)       // 获取单个
-		facility.POST("/list", controller.ListFacilities) // 获取列表
+		facility.POST("", controller.CreateFacility)
+		facility.PUT(":id", controller.UpdateFacility)
+		facility.DELETE(":id", controller.DeleteFacility)
+		facility.GET(":id", controller.GetFacility)
+		facility.POST("/list", controller.ListFacilities)
 	}
+}
+
+func init() {
+	Register(FacilityRouter{})
 }
