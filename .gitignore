@@ -9,7 +9,7 @@
 /bin/*
 /build/*
 main
-
+__debug_bin**
 # Dependency directories (managed by Go modules)
 /vendor/
 
