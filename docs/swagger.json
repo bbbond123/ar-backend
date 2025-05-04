@@ -3,22 +3,5 @@
     "info": {
         "contact": {}
     },
-    "paths": {
-        "/ping": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Ping API",
-                "responses": {
-                    "200": {
-                        "description": "pong",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        }
-    }
+    "paths": {}
 }

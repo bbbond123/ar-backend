@@ -1,12 +1,18 @@
 package router
 
 import (
-	"ar-backend/internal/controller"
-
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter(r *gin.Engine) {
-	r.GET("/ping", controller.Ping)
-	r.GET("/test/db", controller.TestDB)
+// InitRouter 初始化路由
+func InitRouter() *gin.Engine {
+	r := gin.Default()
+
+	// API分组
+	api := r.Group("/api")
+	{
+		RegisterFacilityRoutes(api) // 注册设施路由
+	}
+
+	return r
 }

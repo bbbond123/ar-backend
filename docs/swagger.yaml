@@ -1,14 +1,4 @@
 info:
   contact: {}
-paths:
-  /ping:
-    get:
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: pong
-          schema:
-            type: string
-      summary: Ping API
+paths: {}
 swagger: "2.0"
