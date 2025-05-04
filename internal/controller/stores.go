@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // CreateStore godoc
@@ -150,35 +151,61 @@ func ListStores(c *gin.Context) {
 	})
 }
 
-// @Router /api/stores/list [post]
+func getTagsQuery(db *gorm.DB, storeID string) *gorm.DB {
+	return db.Table("tags").
+		Select("tags.*").
+		Joins("JOIN taggings ON tags.tag_id = taggings.tag_id").
+		Where("taggings.taggable_type = ? AND taggings.taggable_id = ?", "Store", storeID)
+}
+
+// GetTagsByStore godoc
+// @Summary 获取商铺的标签
+// @Description 根据商铺ID获取关联的标签列表
+// @Tags Stores
+// @Accept json
+// @Produce json
+// @Param storeID path string true "商铺ID"
+// @Success 200 {object} model.ListResponse[model.Tag] "成功响应，包含商铺ID和标签列表"
+// @Failure 500 {object} model.BaseResponse "服务器内部错误"
+// @Router /api/stores/{storeID}/tags [get]
 func GetTagsByStore(c *gin.Context) {
 	storeID := c.Param("storeID")
 
+	var total int64
 	var tags []model.Tag
-	err := database.DB.Table("tags").
-		Select("tags.*").
-		Joins("JOIN taggings ON tags.tag_id = taggings.tag_id").
-		Where("taggings.taggable_type = ? AND taggings.taggable_id = ?", "Store", storeID).
-		Find(&tags).Error
+	db := database.DB
 
-	if err != nil {
+	// 计算总数
+	if err := getTagsQuery(db, storeID).Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"store_id": storeID,
-		"tags":     tags,
+	// 查询标签
+	if err := getTagsQuery(db, storeID).Find(&tags).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, model.ListResponse[model.Tag]{
+		Success: true,
+		Total:   total,
+		List:    tags,
 	})
 }
 
-func parseUint(s string) uint {
-	var id uint64
-	id, _ = strconv.ParseUint(s, 10, 64)
-	return uint(id)
-}
-
-// @Router /api/stores/list [post]
+// AddTagToStore godoc
+// @Summary 为商铺添加标签
+// @Description 为指定商铺添加一个标签
+// @Tags Stores
+// @Accept json
+// @Produce json
+// @Param storeID path string true "商铺ID"
+// @Param req body struct{TagID uint `json:"tag_id" binding:"required"`} true "标签ID"
+// @Success 200 {object} model.Response[model.Store]
+// @Failure 400 {object} model.BaseResponse
+// @Failure 500 {object} model.BaseResponse
+// @Router /api/stores/{storeID}/tags [post]
 func AddTagToStore(c *gin.Context) {
 	storeID := c.Param("storeID")
 
@@ -187,7 +214,7 @@ func AddTagToStore(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		c.JSON(http.StatusBadRequest, model.BaseResponse{Success: false, ErrMessage: "Invalid input"})
 		return
 	}
 
@@ -198,13 +225,36 @@ func AddTagToStore(c *gin.Context) {
 	}
 
 	if err := database.DB.Create(&tagging).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, model.BaseResponse{Success: false, ErrMessage: err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Tag added to store"})
+	println("tagging", tagging)
+
+	// 查询添加标签后的商铺信息
+	var store model.Store
+	if err := database.DB.Where("store_id = ?", parseUint(storeID)).First(&store).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, model.BaseResponse{Success: false, ErrMessage: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, model.Response[model.Store]{
+		Success: true,
+		Data:    store,
+	})
 }
 
+// RemoveTagFromStore godoc
+// @Summary 删除商铺的标签
+// @Description 从指定商铺中移除一个标签
+// @Tags Stores
+// @Accept json
+// @Produce json
+// @Param storeID path string true "商铺ID"
+// @Param tagID path string true "标签ID"
+// @Success 200 {object} map[string]interface{} "成功响应，标签移除成功"
+// @Failure 500 {object} map[string]interface{} "服务器内部错误"
+// @Router /api/stores/{storeID}/tags/{tagID} [delete]
 func RemoveTagFromStore(c *gin.Context) {
 	storeID := c.Param("storeID")
 	tagID := c.Param("tagID")
@@ -216,4 +266,10 @@ func RemoveTagFromStore(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Tag removed from store"})
+}
+
+func parseUint(s string) uint {
+	var id uint64
+	id, _ = strconv.ParseUint(s, 10, 64)
+	return uint(id)
 }
