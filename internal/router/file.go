@@ -6,18 +6,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// FileRouter 文章路由模块
+// FileRouter 文件路由模块
 type FileRouter struct{}
 
-// Register 注册文章路由
-func (CommentRouter) FileRegister(r *gin.RouterGroup) {
-	files := r.Group("/files")
+// Register 注册文件路由
+func (FileRouter) Register(r *gin.RouterGroup) {
+	file := r.Group("/files")
 	{
-		files.POST("", controller.CreateFile)
-		files.PUT("", controller.UpdateFile)
-		files.DELETE(":files_id", controller.DeleteFile)
-		files.GET(":files_id", controller.GetFile)
-		files.POST("/list", controller.ListFiles)
+		file.POST("", controller.CreateFile)
+		file.PUT("", controller.UpdateFile)
+		file.DELETE(":file_id", controller.DeleteFile)
+		file.GET(":file_id", controller.GetFile)
+		file.POST("/list", controller.ListFiles)
 	}
 }
 

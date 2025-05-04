@@ -1,18 +1,43 @@
 package model
 
-import (
-	"time"
-)
+import "time"
 
-// Facility 表示数据库中的 facilities 表
+// Menu 表示数据库中的 menus 表
 type Menu struct {
-	FacilityID      int       `gorm:"column:facility_id;primaryKey"`                        // 施設ID: 主键
-	FacilityName    string    `gorm:"column:facility_name;type:varchar(255);not null"`      // 施設名（全角）
-	Location        string    `gorm:"column:location;type:varchar(255);not null"`           // 所在地（全角）
-	DescriptionText string    `gorm:"column:description_text;type:text"`                    // 説明（全角）
-	Latitude        float64   `gorm:"column:latitude;type:decimal(10,6);not null"`          // 緯度
-	Longitude       float64   `gorm:"column:longitude;type:decimal(10,6);not null"`         // 経度
-	PersonID        *int      `gorm:"column:person_id"`                                     // 関連人物ID（允许为NULL）
-	CreatedAt       time.Time `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP"` // 作成日
-	UpdatedAt       time.Time `gorm:"column:updated_at;not null;default:CURRENT_TIMESTAMP"` // 更新日
+	MenuID       int        `gorm:"column:menu_id;primaryKey" json:"menu_id"`
+	MenuName     string     `gorm:"column:menu_name;type:varchar(100);not null" json:"menu_name"`
+	MenuCode     string     `gorm:"column:menu_code;type:varchar(50);not null" json:"menu_code"`
+	DisplayOrder *int       `gorm:"column:display_order" json:"display_order"`
+	IsActive     bool       `gorm:"column:is_active;not null;default:true" json:"is_active"`
+	CreatedAt    time.Time  `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt    *time.Time `gorm:"column:updated_at" json:"updated_at"`
+}
+
+// MenuReqCreate 新建菜单请求
+type MenuReqCreate struct {
+	MenuName     string `json:"menu_name" binding:"required"`
+	MenuCode     string `json:"menu_code" binding:"required"`
+	DisplayOrder *int   `json:"display_order"`
+	IsActive     bool   `json:"is_active" binding:"required"`
+}
+
+// MenuReqEdit 更新菜单请求
+type MenuReqEdit struct {
+	MenuID       int    `json:"menu_id" binding:"required"`
+	MenuName     string `json:"menu_name"`
+	MenuCode     string `json:"menu_code"`
+	DisplayOrder *int   `json:"display_order"`
+	IsActive     bool   `json:"is_active"`
+}
+
+// MenuReqList 菜单分页与搜索请求
+type MenuReqList struct {
+	Page     int    `json:"page" binding:"required"`
+	PageSize int    `json:"page_size" binding:"required"`
+	Keyword  string `json:"keyword"`
+}
+
+// MenuDetailRequest 获取单个菜单请求
+type MenuDetailRequest struct {
+	MenuID int `json:"menu_id" binding:"required"`
 }

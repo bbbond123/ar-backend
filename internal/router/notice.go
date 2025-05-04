@@ -6,10 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// NoticeRouter
+// NoticeRouter 通知路由模块
 type NoticeRouter struct{}
 
-func (CommentRouter) NoticeRegister(r *gin.RouterGroup) {
+// Register 注册通知路由
+func (NoticeRouter) Register(r *gin.RouterGroup) {
 	notice := r.Group("/notices")
 	{
 		notice.POST("", controller.CreateNotice)
