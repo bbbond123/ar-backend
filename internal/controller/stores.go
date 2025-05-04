@@ -149,3 +149,71 @@ func ListStores(c *gin.Context) {
 		List:    stores,
 	})
 }
+
+// @Router /api/stores/list [post]
+func GetTagsByStore(c *gin.Context) {
+	storeID := c.Param("storeID")
+
+	var tags []model.Tag
+	err := database.DB.Table("tags").
+		Select("tags.*").
+		Joins("JOIN taggings ON tags.tag_id = taggings.tag_id").
+		Where("taggings.taggable_type = ? AND taggings.taggable_id = ?", "Store", storeID).
+		Find(&tags).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"store_id": storeID,
+		"tags":     tags,
+	})
+}
+
+func parseUint(s string) uint {
+	var id uint64
+	id, _ = strconv.ParseUint(s, 10, 64)
+	return uint(id)
+}
+
+// @Router /api/stores/list [post]
+func AddTagToStore(c *gin.Context) {
+	storeID := c.Param("storeID")
+
+	var req struct {
+		TagID uint `json:"tag_id" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	tagging := model.Tagging{
+		TagID:        int(req.TagID),
+		TaggableType: "Store",
+		TaggableID:   parseUint(storeID),
+	}
+
+	if err := database.DB.Create(&tagging).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Tag added to store"})
+}
+
+func RemoveTagFromStore(c *gin.Context) {
+	storeID := c.Param("storeID")
+	tagID := c.Param("tagID")
+
+	if err := database.DB.Where("taggable_type = ? AND taggable_id = ? AND tag_id = ?", "Store", storeID, tagID).
+		Delete(&model.Tagging{}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Tag removed from store"})
+}

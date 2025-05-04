@@ -30,3 +30,35 @@ type TagReqList struct {
 	PageSize int    `json:"page_size" binding:"required"`
 	Keyword  string `json:"keyword"`
 }
+
+// Tagging 表示 taggings 表
+type Tagging struct {
+	TaggingID    int        `gorm:"column:tagging_id;primaryKey" json:"tagging_id"`
+	TagID        int        `gorm:"column:tag_id;not null" json:"tag_id"`
+	TaggableType string     `gorm:"column:taggable_type;type:varchar(50);not null" json:"taggable_type"`
+	TaggableID   int        `gorm:"column:taggable_id;not null" json:"taggable_id"`
+	CreatedAt    time.Time  `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt    *time.Time `gorm:"column:updated_at" json:"updated_at"`
+}
+
+// TaggingReqCreate 创建Tagging请求
+type TaggingReqCreate struct {
+	TagID        int    `json:"tag_id" binding:"required"`
+	TaggableType string `json:"taggable_type" binding:"required"`
+	TaggableID   int    `json:"taggable_id" binding:"required"`
+}
+
+// TaggingReqEdit 更新Tagging请求
+type TaggingReqEdit struct {
+	TaggingID    int    `json:"tagging_id" binding:"required"`
+	TagID        int    `json:"tag_id"`
+	TaggableType string `json:"taggable_type"`
+	TaggableID   int    `json:"taggable_id"`
+}
+
+// TaggingReqList Tagging分页请求
+type TaggingReqList struct {
+	Page     int    `json:"page" binding:"required"`
+	PageSize int    `json:"page_size" binding:"required"`
+	Keyword  string `json:"keyword"`
+}
