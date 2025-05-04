@@ -33,23 +33,23 @@ type Facility struct {
 
 // FacilityReqCreate 用于创建设施时的请求参数
 type FacilityReqCreate struct {
-	FacilityName string  `json:"facility_name" binding:"required"` // 设施名
-	Location     string  `json:"location" binding:"required"`      // 所在地
-	Description  string  `json:"description"`                      // 描述
-	Latitude     float64 `json:"latitude" binding:"required"`      // 纬度
-	Longitude    float64 `json:"longitude" binding:"required"`     // 经度
-	PersonID     *int    `json:"person_id"`                        // 相关人物ID（可选）
+	FacilityName    string  `json:"facility_name" binding:"required"` // 设施名
+	Location        string  `json:"location" binding:"required"`      // 所在地
+	DescriptionText string  `json:"description"`                      // 描述
+	Latitude        float64 `json:"latitude" binding:"required"`      // 纬度
+	Longitude       float64 `json:"longitude" binding:"required"`     // 经度
+	PersonID        *int    `json:"person_id"`                        // 相关人物ID（可选）
 }
 
 // FacilityReqEdit 用于编辑设施时的请求参数
 type FacilityReqEdit struct {
-	FacilityID   int     `json:"facility_id" binding:"required"`   // 设施ID
-	FacilityName string  `json:"facility_name" binding:"required"` // 设施名
-	Location     string  `json:"location" binding:"required"`      // 所在地
-	Description  string  `json:"description"`                      // 描述
-	Latitude     float64 `json:"latitude" binding:"required"`      // 纬度
-	Longitude    float64 `json:"longitude" binding:"required"`     // 经度
-	PersonID     *int    `json:"person_id"`                        // 相关人物ID（可选）
+	FacilityID      int     `json:"facility_id" binding:"required"`   // 设施ID
+	FacilityName    string  `json:"facility_name" binding:"required"` // 设施名
+	Location        string  `json:"location" binding:"required"`      // 所在地
+	DescriptionText string  `json:"description"`                      // 描述
+	Latitude        float64 `json:"latitude" binding:"required"`      // 纬度
+	Longitude       float64 `json:"longitude" binding:"required"`     // 经度
+	PersonID        *int    `json:"person_id"`                        // 相关人物ID（可选）
 }
 
 // FacilityReqList 用于分页与查询设施时的请求参数
