@@ -40,3 +40,5 @@ Thumbs.db
 
 # Environment files (if they contain sensitive data)
 .env
+
+ar-backend
