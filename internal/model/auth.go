@@ -1,5 +1,9 @@
 package model
 
+import (
+	"github.com/google/uuid"
+)
+
 type LoginRequest struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
@@ -17,4 +21,28 @@ type RegisterRequest struct {
 type RegisterResponse struct {
 	User  User   `json:"user"`
 	Token string `json:"token"`
+}
+
+type AuthResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	User         User   `json:"user"`
+}
+
+// 生成 refresh token
+func generateRefreshToken() string {
+	return uuid.NewString()
+}
+
+// RefreshTokenRequest/Response 结构体
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+type RefreshTokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+type RevokeTokenRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
 }

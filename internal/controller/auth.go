@@ -53,21 +53,21 @@ func Login(c *gin.Context) {
 	c.JSON(200, gin.H{"token": token})
 }
 
-func RefreshToken(c *gin.Context) {
-	tokenStr := c.PostForm("token")
-	claims := &Claims{}
-	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
-		return jwtKey, nil
-	})
+// func RefreshToken(c *gin.Context) {
+// 	tokenStr := c.PostForm("token")
+// 	claims := &Claims{}
+// 	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+// 		return jwtKey, nil
+// 	})
 
-	if err != nil || !token.Valid {
-		c.JSON(401, gin.H{"error": "invalid token"})
-		return
-	}
+// 	if err != nil || !token.Valid {
+// 		c.JSON(401, gin.H{"error": "invalid token"})
+// 		return
+// 	}
 
-	newToken, _ := generateToken(claims.Username)
-	c.JSON(200, gin.H{"token": newToken})
-}
+// 	newToken, _ := generateToken(claims.Username)
+// 	c.JSON(200, gin.H{"token": newToken})
+// }
 
 // Register godoc
 // @Summary 用户注册
@@ -140,4 +140,40 @@ func generateTokenWithUserID(userID int) (string, error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(jwtKey)
+}
+
+// 控制器
+func RefreshToken(c *gin.Context) {
+	var req model.RefreshTokenRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, model.BaseResponse{Success: false, ErrMessage: err.Error()})
+		return
+	}
+	db := database.GetDB()
+	var token model.RefreshToken
+	if err := db.Where("refresh_token = ? AND revoked = false AND expires_at > ?", req.RefreshToken, time.Now()).First(&token).Error; err != nil {
+		c.JSON(401, model.BaseResponse{Success: false, ErrMessage: "refresh token无效"})
+		return
+	}
+	// 生成新access token
+	accessToken, err := generateTokenWithUserID(token.UserID)
+	if err != nil {
+		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "Token生成失败"})
+		return
+	}
+	c.JSON(200, model.Response[model.RefreshTokenResponse]{Success: true, Data: model.RefreshTokenResponse{
+		AccessToken:  accessToken,
+		RefreshToken: req.RefreshToken, // 或生成新refresh token
+	}})
+}
+
+func RevokeRefreshToken(c *gin.Context) {
+	var req model.RevokeTokenRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, model.BaseResponse{Success: false, ErrMessage: err.Error()})
+		return
+	}
+	db := database.GetDB()
+	db.Model(&model.RefreshToken{}).Where("refresh_token = ?", req.RefreshToken).Update("revoked", true)
+	c.JSON(200, model.BaseResponse{Success: true})
 }

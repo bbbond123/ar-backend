@@ -25,6 +25,8 @@ func InitRouter() *gin.Engine {
 	api := r.Group("/api")
 
 	api.POST("/login", controller.Login)
+	api.POST("/auth/refresh", controller.RefreshToken)
+	api.POST("/auth/logout", controller.RevokeRefreshToken)
 
 	// 注册所有模块路由
 	for _, rr := range routeRegisters {
