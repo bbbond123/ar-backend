@@ -26,6 +26,17 @@ func generateToken(username string) (string, error) {
 	return token.SignedString(jwtKey)
 }
 
+// Login godoc
+// @Summary 登录
+// @Description 登录
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param payload body model.LoginRequest true "登录请求"
+// @Success 200 {object} model.Response[model.LoginResponse]
+// @Failure 401 {object} model.BaseResponse
+// @Failure 500 {object} model.BaseResponse
+// @Router /api/auth/login [post]
 func Login(c *gin.Context) {
 	username := c.PostForm("username")
 	password := c.PostForm("password")

@@ -1,6 +1,9 @@
 package router
 
 import (
+	"ar-backend/internal/controller"
+	"ar-backend/internal/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,9 +24,19 @@ func InitRouter() *gin.Engine {
 	r := gin.Default()
 	api := r.Group("/api")
 
+	api.POST("/login", controller.Login)
+
 	// 注册所有模块路由
 	for _, rr := range routeRegisters {
 		rr.Register(api)
+	}
+
+	// 注册auth路由
+	auth := api.Group("/auth")
+	auth.Use(middleware.JWTAuth())
+	{
+		auth.GET("/user/profile", controller.UserProfile)
+		// 其他需要登录的接口
 	}
 
 	return r

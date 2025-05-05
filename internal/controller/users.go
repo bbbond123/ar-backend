@@ -158,3 +158,22 @@ func ListUsers(c *gin.Context) {
 		List:    users,
 	})
 }
+
+// UserProfile godoc
+// @Summary 获取用户信息
+// @Description 获取当前登录用户信息
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Success 200 {object} model.Response[model.User]
+// @Failure 400 {object} model.BaseResponse
+// @Failure 500 {object} model.BaseResponse
+// @Router /api/auth/user/profile [get]
+func UserProfile(c *gin.Context) {
+	userID := c.GetInt("user_id")
+	db := database.GetDB()
+	var user model.User
+	db.First(&user, userID)
+	c.JSON(http.StatusOK, model.Response[model.User]{Success: true, Data: user})
+
+}
