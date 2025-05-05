@@ -489,6 +489,26 @@ definitions:
         description: 总条数
         type: integer
     type: object
+  model.ListResponse-model_Tag:
+    properties:
+      errCode:
+        description: 错误码
+        type: string
+      errMessage:
+        description: 错误信息
+        type: string
+      list:
+        description: 列表
+        items:
+          $ref: '#/definitions/model.Tag'
+        type: array
+      success:
+        description: 请求是否成功
+        type: boolean
+      total:
+        description: 总条数
+        type: integer
+    type: object
   model.ListResponse-model_User:
     properties:
       errCode:
@@ -501,6 +521,26 @@ definitions:
         description: 列表
         items:
           $ref: '#/definitions/model.User'
+        type: array
+      success:
+        description: 请求是否成功
+        type: boolean
+      total:
+        description: 总条数
+        type: integer
+    type: object
+  model.ListResponse-model_VisitHistory:
+    properties:
+      errCode:
+        description: 错误码
+        type: string
+      errMessage:
+        description: 错误信息
+        type: string
+      list:
+        description: 列表
+        items:
+          $ref: '#/definitions/model.VisitHistory'
         type: array
       success:
         description: 请求是否成功
@@ -830,11 +870,43 @@ definitions:
         description: 请求是否成功
         type: boolean
     type: object
+  model.Response-model_Tag:
+    properties:
+      data:
+        allOf:
+        - $ref: '#/definitions/model.Tag'
+        description: 数据
+      errCode:
+        description: 错误码
+        type: string
+      errMessage:
+        description: 错误信息
+        type: string
+      success:
+        description: 请求是否成功
+        type: boolean
+    type: object
   model.Response-model_User:
     properties:
       data:
         allOf:
         - $ref: '#/definitions/model.User'
+        description: 数据
+      errCode:
+        description: 错误码
+        type: string
+      errMessage:
+        description: 错误信息
+        type: string
+      success:
+        description: 请求是否成功
+        type: boolean
+    type: object
+  model.Response-model_VisitHistory:
+    properties:
+      data:
+        allOf:
+        - $ref: '#/definitions/model.VisitHistory'
         description: 数据
       errCode:
         description: 错误码
@@ -947,6 +1019,58 @@ definitions:
     - page
     - page_size
     type: object
+  model.StoreTagReq:
+    properties:
+      tag_id:
+        type: integer
+    required:
+    - tag_id
+    type: object
+  model.Tag:
+    properties:
+      created_at:
+        type: string
+      is_active:
+        type: boolean
+      tag_id:
+        type: integer
+      tag_name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.TagReqCreate:
+    properties:
+      is_active:
+        type: boolean
+      tag_name:
+        type: string
+    required:
+    - tag_name
+    type: object
+  model.TagReqEdit:
+    properties:
+      is_active:
+        type: boolean
+      tag_id:
+        type: integer
+      tag_name:
+        type: string
+    required:
+    - tag_id
+    type: object
+  model.TagReqList:
+    properties:
+      keyword:
+        type: string
+      page:
+        type: integer
+      page_size:
+        type: integer
+    required:
+    - page
+    - page_size
+    type: object
   model.User:
     properties:
       address:
@@ -1043,6 +1167,66 @@ definitions:
     - user_id
     type: object
   model.UserReqList:
+    properties:
+      keyword:
+        type: string
+      page:
+        type: integer
+      page_size:
+        type: integer
+    required:
+    - page
+    - page_size
+    type: object
+  model.VisitHistory:
+    properties:
+      created_at:
+        type: string
+      facility_id:
+        type: integer
+      history_id:
+        type: integer
+      is_active:
+        type: boolean
+      scan_at:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  model.VisitHistoryReqCreate:
+    properties:
+      facility_id:
+        type: integer
+      is_active:
+        type: boolean
+      scan_at:
+        type: string
+      user_id:
+        type: integer
+    required:
+    - facility_id
+    - is_active
+    - scan_at
+    - user_id
+    type: object
+  model.VisitHistoryReqEdit:
+    properties:
+      facility_id:
+        type: integer
+      history_id:
+        type: integer
+      is_active:
+        type: boolean
+      scan_at:
+        type: string
+      user_id:
+        type: integer
+    required:
+    - history_id
+    type: object
+  model.VisitHistoryReqList:
     properties:
       keyword:
         type: string
@@ -2164,6 +2348,97 @@ paths:
       summary: 获取商铺信息
       tags:
       - Stores
+  /api/stores/{storeID}/tags:
+    get:
+      consumes:
+      - application/json
+      description: 根据商铺ID获取关联的标签列表
+      parameters:
+      - description: 商铺ID
+        in: path
+        name: storeID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功响应，包含商铺ID和标签列表
+          schema:
+            $ref: '#/definitions/model.ListResponse-model_Tag'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 获取商铺的标签
+      tags:
+      - Stores
+    post:
+      consumes:
+      - application/json
+      description: 为指定商铺添加一个标签
+      parameters:
+      - description: 商铺ID
+        in: path
+        name: storeID
+        required: true
+        type: string
+      - description: 标签ID
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/model.StoreTagReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response-model_Store'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 为商铺添加标签
+      tags:
+      - Stores
+  /api/stores/{storeID}/tags/{tagID}:
+    delete:
+      consumes:
+      - application/json
+      description: 从指定商铺中移除一个标签
+      parameters:
+      - description: 商铺ID
+        in: path
+        name: storeID
+        required: true
+        type: string
+      - description: 标签ID
+        in: path
+        name: tagID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功响应，标签移除成功
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务器内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 删除商铺的标签
+      tags:
+      - Stores
   /api/stores/list:
     post:
       consumes:
@@ -2190,6 +2465,148 @@ paths:
       summary: 获取商铺列表
       tags:
       - Stores
+  /api/tags:
+    post:
+      consumes:
+      - application/json
+      description: 创建一个新标签
+      parameters:
+      - description: 标签信息
+        in: body
+        name: tag
+        required: true
+        schema:
+          $ref: '#/definitions/model.TagReqCreate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response-model_Tag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 创建标签
+      tags:
+      - Tags
+    put:
+      consumes:
+      - application/json
+      description: 更新标签信息
+      parameters:
+      - description: 标签信息
+        in: body
+        name: tag
+        required: true
+        schema:
+          $ref: '#/definitions/model.TagReqEdit'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 更新标签
+      tags:
+      - Tags
+  /api/tags/{tag_id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除一个标签
+      parameters:
+      - description: 标签ID
+        in: path
+        name: tag_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 删除标签
+      tags:
+      - Tags
+    get:
+      consumes:
+      - application/json
+      description: 获取单个标签
+      parameters:
+      - description: 标签ID
+        in: path
+        name: tag_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response-model_Tag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 获取标签
+      tags:
+      - Tags
+  /api/tags/list:
+    post:
+      consumes:
+      - application/json
+      description: 获取标签分页列表
+      parameters:
+      - description: 分页与搜索
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/model.TagReqList'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ListResponse-model_Tag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 获取标签列表
+      tags:
+      - Tags
   /api/users:
     post:
       consumes:
@@ -2332,4 +2749,154 @@ paths:
       summary: 获取用户列表
       tags:
       - Users
+  /api/visit_histories:
+    post:
+      consumes:
+      - application/json
+      description: 新建一个访问记录
+      parameters:
+      - description: 访问记录信息
+        in: body
+        name: visit_history
+        required: true
+        schema:
+          $ref: '#/definitions/model.VisitHistoryReqCreate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response-model_VisitHistory'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 新建访问记录
+      tags:
+      - VisitHistories
+    put:
+      consumes:
+      - application/json
+      description: 更新访问记录信息
+      parameters:
+      - description: 访问记录信息
+        in: body
+        name: visit_history
+        required: true
+        schema:
+          $ref: '#/definitions/model.VisitHistoryReqEdit'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 更新访问记录
+      tags:
+      - VisitHistories
+  /api/visit_histories/{history_id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除一个访问记录
+      parameters:
+      - description: 访问记录ID
+        in: path
+        name: history_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 删除访问记录
+      tags:
+      - VisitHistories
+    get:
+      consumes:
+      - application/json
+      description: 获取单个访问记录
+      parameters:
+      - description: 访问记录ID
+        in: path
+        name: history_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response-model_VisitHistory'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 获取访问记录
+      tags:
+      - VisitHistories
+  /api/visit_histories/list:
+    post:
+      consumes:
+      - application/json
+      description: 获取访问记录分页列表
+      parameters:
+      - description: 分页与搜索
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/model.VisitHistoryReqList'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ListResponse-model_VisitHistory'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 获取访问记录列表
+      tags:
+      - VisitHistories
 swagger: "2.0"

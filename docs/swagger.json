@@ -1641,6 +1641,142 @@
                 }
             }
         },
+        "/api/stores/{storeID}/tags": {
+            "get": {
+                "description": "根据商铺ID获取关联的标签列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "获取商铺的标签",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "商铺ID",
+                        "name": "storeID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功响应，包含商铺ID和标签列表",
+                        "schema": {
+                            "$ref": "#/definitions/model.ListResponse-model_Tag"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "为指定商铺添加一个标签",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "为商铺添加标签",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "商铺ID",
+                        "name": "storeID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "标签ID",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.StoreTagReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response-model_Store"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/stores/{storeID}/tags/{tagID}": {
+            "delete": {
+                "description": "从指定商铺中移除一个标签",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "删除商铺的标签",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "商铺ID",
+                        "name": "storeID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "标签ID",
+                        "name": "tagID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功响应，标签移除成功",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/api/stores/{store_id}": {
             "get": {
                 "description": "获取单个商铺信息",
@@ -1720,6 +1856,222 @@
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tags": {
+            "put": {
+                "description": "更新标签信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tags"
+                ],
+                "summary": "更新标签",
+                "parameters": [
+                    {
+                        "description": "标签信息",
+                        "name": "tag",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.TagReqEdit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建一个新标签",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tags"
+                ],
+                "summary": "创建标签",
+                "parameters": [
+                    {
+                        "description": "标签信息",
+                        "name": "tag",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.TagReqCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response-model_Tag"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tags/list": {
+            "post": {
+                "description": "获取标签分页列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tags"
+                ],
+                "summary": "获取标签列表",
+                "parameters": [
+                    {
+                        "description": "分页与搜索",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.TagReqList"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.ListResponse-model_Tag"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tags/{tag_id}": {
+            "get": {
+                "description": "获取单个标签",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tags"
+                ],
+                "summary": "获取标签",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "标签ID",
+                        "name": "tag_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response-model_Tag"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除一个标签",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tags"
+                ],
+                "summary": "删除标签",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "标签ID",
+                        "name": "tag_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/model.BaseResponse"
                         }
@@ -1930,6 +2282,234 @@
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/visit_histories": {
+            "put": {
+                "description": "更新访问记录信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "VisitHistories"
+                ],
+                "summary": "更新访问记录",
+                "parameters": [
+                    {
+                        "description": "访问记录信息",
+                        "name": "visit_history",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.VisitHistoryReqEdit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "新建一个访问记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "VisitHistories"
+                ],
+                "summary": "新建访问记录",
+                "parameters": [
+                    {
+                        "description": "访问记录信息",
+                        "name": "visit_history",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.VisitHistoryReqCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response-model_VisitHistory"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/visit_histories/list": {
+            "post": {
+                "description": "获取访问记录分页列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "VisitHistories"
+                ],
+                "summary": "获取访问记录列表",
+                "parameters": [
+                    {
+                        "description": "分页与搜索",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.VisitHistoryReqList"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.ListResponse-model_VisitHistory"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/visit_histories/{history_id}": {
+            "get": {
+                "description": "获取单个访问记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "VisitHistories"
+                ],
+                "summary": "获取访问记录",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "访问记录ID",
+                        "name": "history_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response-model_VisitHistory"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除一个访问记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "VisitHistories"
+                ],
+                "summary": "删除访问记录",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "访问记录ID",
+                        "name": "history_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/model.BaseResponse"
                         }
@@ -2649,6 +3229,34 @@
                 }
             }
         },
+        "model.ListResponse-model_Tag": {
+            "type": "object",
+            "properties": {
+                "errCode": {
+                    "description": "错误码",
+                    "type": "string"
+                },
+                "errMessage": {
+                    "description": "错误信息",
+                    "type": "string"
+                },
+                "list": {
+                    "description": "列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Tag"
+                    }
+                },
+                "success": {
+                    "description": "请求是否成功",
+                    "type": "boolean"
+                },
+                "total": {
+                    "description": "总条数",
+                    "type": "integer"
+                }
+            }
+        },
         "model.ListResponse-model_User": {
             "type": "object",
             "properties": {
@@ -2665,6 +3273,34 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/model.User"
+                    }
+                },
+                "success": {
+                    "description": "请求是否成功",
+                    "type": "boolean"
+                },
+                "total": {
+                    "description": "总条数",
+                    "type": "integer"
+                }
+            }
+        },
+        "model.ListResponse-model_VisitHistory": {
+            "type": "object",
+            "properties": {
+                "errCode": {
+                    "description": "错误码",
+                    "type": "string"
+                },
+                "errMessage": {
+                    "description": "错误信息",
+                    "type": "string"
+                },
+                "list": {
+                    "description": "列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.VisitHistory"
                     }
                 },
                 "success": {
@@ -3167,6 +3803,31 @@
                 }
             }
         },
+        "model.Response-model_Tag": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.Tag"
+                        }
+                    ]
+                },
+                "errCode": {
+                    "description": "错误码",
+                    "type": "string"
+                },
+                "errMessage": {
+                    "description": "错误信息",
+                    "type": "string"
+                },
+                "success": {
+                    "description": "请求是否成功",
+                    "type": "boolean"
+                }
+            }
+        },
         "model.Response-model_User": {
             "type": "object",
             "properties": {
@@ -3175,6 +3836,31 @@
                     "allOf": [
                         {
                             "$ref": "#/definitions/model.User"
+                        }
+                    ]
+                },
+                "errCode": {
+                    "description": "错误码",
+                    "type": "string"
+                },
+                "errMessage": {
+                    "description": "错误信息",
+                    "type": "string"
+                },
+                "success": {
+                    "description": "请求是否成功",
+                    "type": "boolean"
+                }
+            }
+        },
+        "model.Response-model_VisitHistory": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.VisitHistory"
                         }
                     ]
                 },
@@ -3341,6 +4027,86 @@
                 }
             }
         },
+        "model.StoreTagReq": {
+            "type": "object",
+            "required": [
+                "tag_id"
+            ],
+            "properties": {
+                "tag_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.Tag": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "tag_id": {
+                    "type": "integer"
+                },
+                "tag_name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TagReqCreate": {
+            "type": "object",
+            "required": [
+                "tag_name"
+            ],
+            "properties": {
+                "is_active": {
+                    "type": "boolean"
+                },
+                "tag_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TagReqEdit": {
+            "type": "object",
+            "required": [
+                "tag_id"
+            ],
+            "properties": {
+                "is_active": {
+                    "type": "boolean"
+                },
+                "tag_id": {
+                    "type": "integer"
+                },
+                "tag_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TagReqList": {
+            "type": "object",
+            "required": [
+                "page",
+                "page_size"
+            ],
+            "properties": {
+                "keyword": {
+                    "type": "string"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer"
+                }
+            }
+        },
         "model.User": {
             "type": "object",
             "properties": {
@@ -3485,6 +4251,96 @@
             }
         },
         "model.UserReqList": {
+            "type": "object",
+            "required": [
+                "page",
+                "page_size"
+            ],
+            "properties": {
+                "keyword": {
+                    "type": "string"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.VisitHistory": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "facility_id": {
+                    "type": "integer"
+                },
+                "history_id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "scan_at": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.VisitHistoryReqCreate": {
+            "type": "object",
+            "required": [
+                "facility_id",
+                "is_active",
+                "scan_at",
+                "user_id"
+            ],
+            "properties": {
+                "facility_id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "scan_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.VisitHistoryReqEdit": {
+            "type": "object",
+            "required": [
+                "history_id"
+            ],
+            "properties": {
+                "facility_id": {
+                    "type": "integer"
+                },
+                "history_id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "scan_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.VisitHistoryReqList": {
             "type": "object",
             "required": [
                 "page",

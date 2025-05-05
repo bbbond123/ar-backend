@@ -59,3 +59,7 @@ type StoreReqList struct {
 type StoreDetailRequest struct {
 	StoreID int `json:"store_id" binding:"required"`
 }
+
+type StoreTagReq struct {
+	TagID uint `json:"tag_id" binding:"required"`
+}

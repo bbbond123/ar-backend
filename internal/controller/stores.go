@@ -201,7 +201,7 @@ func GetTagsByStore(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param storeID path string true "商铺ID"
-// @Param req body struct{TagID uint `json:"tag_id" binding:"required"`} true "标签ID"
+// @Param req body model.StoreTagReq true "标签ID"
 // @Success 200 {object} model.Response[model.Store]
 // @Failure 400 {object} model.BaseResponse
 // @Failure 500 {object} model.BaseResponse
