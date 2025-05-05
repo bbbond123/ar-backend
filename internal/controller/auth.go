@@ -12,7 +12,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var jwtKey = []byte("secret_key")
+const secretKey = "my_secret_key"
+const refreshSecretKey = "my_refresh_secret_key"
 
 type Claims struct {
 	Username string `json:"username"`
@@ -47,12 +48,16 @@ func Login(c *gin.Context) {
 		c.JSON(401, model.BaseResponse{Success: false, ErrMessage: "密码错误"})
 		return
 	}
-	accessToken, err := generateTokenWithUserID(user.UserID)
+	accessToken, err := generateAccessToken(user.UserID)
 	if err != nil {
 		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "Token生成失败"})
 		return
 	}
-	refreshToken := generateRefreshToken()
+	refreshToken, err := generateRefreshTokenJWT(user.UserID)
+	if err != nil {
+		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "RefreshToken生成失败"})
+		return
+	}
 	expiresAt := time.Now().Add(7 * 24 * time.Hour)
 	if err := db.Create(&model.RefreshToken{
 		UserID:       user.UserID,
@@ -128,13 +133,18 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	accessToken, err := generateTokenWithUserID(user.UserID)
+	accessToken, err := generateAccessToken(user.UserID)
 	if err != nil {
 		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "Token生成失败"})
 		return
 	}
 
-	refreshToken := generateRefreshToken()
+	refreshToken, err := generateRefreshTokenJWT(user.UserID)
+	if err != nil {
+		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "RefreshToken生成失败"})
+		return
+	}
+
 	expiresAt := time.Now().Add(7 * 24 * time.Hour)
 	if err := db.Create(&model.RefreshToken{
 		UserID:       user.UserID,
@@ -156,8 +166,9 @@ func Register(c *gin.Context) {
 	})
 }
 
-func generateTokenWithUserID(userID int) (string, error) {
-	expirationTime := time.Now().Add(24 * time.Hour)
+// 生成短时access token（15分钟）
+func generateAccessToken(userID int) (string, error) {
+	expirationTime := time.Now().Add(15 * time.Minute)
 	type UserIDClaims struct {
 		UserID int `json:"user_id"`
 		jwt.RegisteredClaims
@@ -169,34 +180,88 @@ func generateTokenWithUserID(userID int) (string, error) {
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtKey)
+	return token.SignedString([]byte(secretKey))
 }
 
-// 控制器
+// 生成长时refresh token（7天）
+func generateRefreshTokenJWT(userID int) (string, error) {
+	expirationTime := time.Now().Add(7 * 24 * time.Hour)
+	type RefreshClaims struct {
+		UserID int `json:"user_id"`
+		jwt.RegisteredClaims
+	}
+	claims := &RefreshClaims{
+		UserID: userID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(refreshSecretKey))
+}
+
+// RefreshToken godoc
+// @Summary 刷新Access Token
+// @Description 使用Refresh Token刷新Access Token
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param payload body model.RefreshTokenRequest true "刷新Token请求"
+// @Success 200 {object} model.Response[model.RefreshTokenResponse]
+// @Failure 400 {object} model.BaseResponse
+// @Failure 401 {object} model.BaseResponse
+// @Failure 500 {object} model.BaseResponse
+// @Router /api/auth/refresh [post]
 func RefreshToken(c *gin.Context) {
 	var req model.RefreshTokenRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, model.BaseResponse{Success: false, ErrMessage: err.Error()})
 		return
 	}
-	db := database.GetDB()
-	var token model.RefreshToken
-	if err := db.Where("refresh_token = ? AND revoked = false AND expires_at > ?", req.RefreshToken, time.Now()).First(&token).Error; err != nil {
+	// 1. 校验refreshToken格式和签名
+	refreshTokenStr := req.RefreshToken
+	type RefreshClaims struct {
+		UserID int `json:"user_id"`
+		jwt.RegisteredClaims
+	}
+	claims := &RefreshClaims{}
+	token, err := jwt.ParseWithClaims(refreshTokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(refreshSecretKey), nil
+	})
+	if err != nil || !token.Valid {
 		c.JSON(401, model.BaseResponse{Success: false, ErrMessage: "refresh token无效"})
 		return
 	}
-	// 生成新access token
-	accessToken, err := generateTokenWithUserID(token.UserID)
+	// 2. 查库校验refreshToken是否存在且未撤销且未过期
+	db := database.GetDB()
+	var dbToken model.RefreshToken
+	if err := db.Where("refresh_token = ? AND revoked = false AND expires_at > ?", refreshTokenStr, time.Now()).First(&dbToken).Error; err != nil {
+		c.JSON(401, model.BaseResponse{Success: false, ErrMessage: "refresh token无效或已过期"})
+		return
+	}
+	// 3. 生成新的access token
+	accessToken, err := generateAccessToken(claims.UserID)
 	if err != nil {
 		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "Token生成失败"})
 		return
 	}
 	c.JSON(200, model.Response[model.RefreshTokenResponse]{Success: true, Data: model.RefreshTokenResponse{
 		AccessToken:  accessToken,
-		RefreshToken: req.RefreshToken, // 或生成新refresh token
+		RefreshToken: refreshTokenStr,
 	}})
 }
 
+// RevokeRefreshToken godoc
+// @Summary 登出
+// @Description 使refresh token失效（登出）
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param payload body model.RevokeTokenRequest true "登出请求"
+// @Success 200 {object} model.BaseResponse
+// @Failure 400 {object} model.BaseResponse
+// @Failure 500 {object} model.BaseResponse
+// @Router /api/auth/logout [post]
 func RevokeRefreshToken(c *gin.Context) {
 	var req model.RevokeTokenRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -204,12 +269,14 @@ func RevokeRefreshToken(c *gin.Context) {
 		return
 	}
 	db := database.GetDB()
-	db.Model(&model.RefreshToken{}).Where("refresh_token = ?", req.RefreshToken).Update("revoked", true)
+	result := db.Model(&model.RefreshToken{}).Where("refresh_token = ? AND revoked = false", req.RefreshToken).Update("revoked", true)
+	if result.Error != nil {
+		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: result.Error.Error()})
+		return
+	}
+	if result.RowsAffected == 0 {
+		c.JSON(400, model.BaseResponse{Success: false, ErrMessage: "无效或已撤销的refresh token"})
+		return
+	}
 	c.JSON(200, model.BaseResponse{Success: true})
-}
-
-func generateRefreshToken() string {
-	// Implementation of generateRefreshToken function
-	// This is a placeholder and should be replaced with the actual implementation
-	return ""
 }

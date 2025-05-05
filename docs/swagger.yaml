@@ -832,6 +832,20 @@ definitions:
     - page
     - page_size
     type: object
+  model.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  model.RefreshTokenResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
   model.RegisterRequest:
     properties:
       email:
@@ -986,6 +1000,22 @@ definitions:
         description: 请求是否成功
         type: boolean
     type: object
+  model.Response-model_RefreshTokenResponse:
+    properties:
+      data:
+        allOf:
+        - $ref: '#/definitions/model.RefreshTokenResponse'
+        description: 数据
+      errCode:
+        description: 错误码
+        type: string
+      errMessage:
+        description: 错误信息
+        type: string
+      success:
+        description: 请求是否成功
+        type: boolean
+    type: object
   model.Response-model_Store:
     properties:
       data:
@@ -1049,6 +1079,13 @@ definitions:
       success:
         description: 请求是否成功
         type: boolean
+    type: object
+  model.RevokeTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
     type: object
   model.Store:
     properties:
@@ -1547,6 +1584,70 @@ paths:
           schema:
             $ref: '#/definitions/model.BaseResponse'
       summary: 登录
+      tags:
+      - Auth
+  /api/auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: 使refresh token失效（登出）
+      parameters:
+      - description: 登出请求
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.RevokeTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 登出
+      tags:
+      - Auth
+  /api/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: 使用Refresh Token刷新Access Token
+      parameters:
+      - description: 刷新Token请求
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response-model_RefreshTokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 刷新Access Token
       tags:
       - Auth
   /api/auth/register:
