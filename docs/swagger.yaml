@@ -1468,10 +1468,16 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/model.BaseResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/model.BaseResponse'
+      security:
+      - ApiKeyAuth: []
       summary: 更新文章
       tags:
       - Articles
@@ -1497,10 +1503,16 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/model.BaseResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/model.BaseResponse'
+      security:
+      - ApiKeyAuth: []
       summary: 删除文章
       tags:
       - Articles
@@ -1706,6 +1718,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/model.BaseResponse'
+      security:
+      - ApiKeyAuth: []
       summary: 获取用户信息
       tags:
       - Users
@@ -3367,4 +3381,9 @@ paths:
       summary: 获取访问记录列表
       tags:
       - VisitHistories
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

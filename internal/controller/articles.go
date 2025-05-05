@@ -78,7 +78,9 @@ func CreateArticle(c *gin.Context) {
 // @Param article body model.ArticleReqEdit true "文章信息"
 // @Success 200 {object} model.BaseResponse
 // @Failure 400 {object} model.BaseResponse
+// @Failure 401 {object} model.BaseResponse
 // @Failure 500 {object} model.BaseResponse
+// @Security ApiKeyAuth
 // @Router /api/articles [put]
 func UpdateArticle(c *gin.Context) {
 	var req model.ArticleReqEdit
@@ -105,7 +107,9 @@ func UpdateArticle(c *gin.Context) {
 // @Param article_id path int true "文章ID"
 // @Success 200 {object} model.BaseResponse
 // @Failure 400 {object} model.BaseResponse
+// @Failure 401 {object} model.BaseResponse
 // @Failure 500 {object} model.BaseResponse
+// @Security ApiKeyAuth
 // @Router /api/articles/{article_id} [delete]
 func DeleteArticle(c *gin.Context) {
 	id := c.Param("article_id")

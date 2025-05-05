@@ -168,6 +168,7 @@ func ListUsers(c *gin.Context) {
 // @Success 200 {object} model.Response[model.User]
 // @Failure 400 {object} model.BaseResponse
 // @Failure 500 {object} model.BaseResponse
+// @Security ApiKeyAuth
 // @Router /api/auth/user/profile [get]
 func UserProfile(c *gin.Context) {
 	userID := c.GetInt("user_id")

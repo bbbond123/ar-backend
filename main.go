@@ -11,6 +11,9 @@ import (
 	_ "ar-backend/docs" // Swagger 文档自动生成 (swag init 生成的)
 )
 
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	// 初始化数据库
 	database.ConnectDatabase()

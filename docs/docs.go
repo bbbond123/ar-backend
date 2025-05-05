@@ -17,6 +17,11 @@ const docTemplate = `{
     "paths": {
         "/api/articles": {
             "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "更新文章信息",
                 "consumes": [
                     "application/json"
@@ -48,6 +53,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/model.BaseResponse"
                         }
@@ -200,6 +211,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "删除一个文章",
                 "consumes": [
                     "application/json"
@@ -229,6 +245,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/model.BaseResponse"
                         }
@@ -440,6 +462,11 @@ const docTemplate = `{
         },
         "/api/auth/user/profile": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "获取当前登录用户信息",
                 "consumes": [
                     "application/json"
@@ -5084,6 +5111,13 @@ const docTemplate = `{
                     "type": "integer"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
