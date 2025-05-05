@@ -77,6 +77,15 @@ definitions:
     - page
     - page_size
     type: object
+  model.AuthResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+      user:
+        $ref: '#/definitions/model.User'
+    type: object
   model.BaseResponse:
     properties:
       errCode:
@@ -620,6 +629,16 @@ definitions:
         description: 总条数
         type: integer
     type: object
+  model.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
   model.Menu:
     properties:
       created_at:
@@ -813,11 +832,44 @@ definitions:
     - page
     - page_size
     type: object
+  model.RegisterRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  model.RegisterResponse:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/model.User'
+    type: object
   model.Response-model_Article:
     properties:
       data:
         allOf:
         - $ref: '#/definitions/model.Article'
+        description: 数据
+      errCode:
+        description: 错误码
+        type: string
+      errMessage:
+        description: 错误信息
+        type: string
+      success:
+        description: 请求是否成功
+        type: boolean
+    type: object
+  model.Response-model_AuthResponse:
+    properties:
+      data:
+        allOf:
+        - $ref: '#/definitions/model.AuthResponse'
         description: 数据
       errCode:
         description: 错误码
@@ -930,6 +982,22 @@ definitions:
       data:
         allOf:
         - $ref: '#/definitions/model.RefreshToken'
+        description: 数据
+      errCode:
+        description: 错误码
+        type: string
+      errMessage:
+        description: 错误信息
+        type: string
+      success:
+        description: 请求是否成功
+        type: boolean
+    type: object
+  model.Response-model_RegisterResponse:
+    properties:
+      data:
+        allOf:
+        - $ref: '#/definitions/model.RegisterResponse'
         description: 数据
       errCode:
         description: 错误码
@@ -1470,6 +1538,93 @@ paths:
       summary: 获取文章列表
       tags:
       - Articles
+  /api/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: 登录
+      parameters:
+      - description: 登录请求
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response-model_AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 登录
+      tags:
+      - Auth
+  /api/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: 用户注册，创建新用户
+      parameters:
+      - description: 注册请求
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response-model_RegisterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 用户注册
+      tags:
+      - Auth
+  /api/auth/user/profile:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前登录用户信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response-model_User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: 获取用户信息
+      tags:
+      - Users
   /api/comments:
     post:
       consumes:

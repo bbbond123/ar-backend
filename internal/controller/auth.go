@@ -18,18 +18,6 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func generateToken(username string) (string, error) {
-	expirationTime := time.Now().Add(24 * time.Hour)
-	claims := &Claims{
-		Username: username,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expirationTime),
-		},
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtKey)
-}
-
 // Login godoc
 // @Summary 登录
 // @Description 登录
@@ -37,37 +25,52 @@ func generateToken(username string) (string, error) {
 // @Accept json
 // @Produce json
 // @Param payload body model.LoginRequest true "登录请求"
-// @Success 200 {object} model.Response[model.LoginResponse]
+// @Success 200 {object} model.Response[model.AuthResponse]
+// @Failure 400 {object} model.BaseResponse
 // @Failure 401 {object} model.BaseResponse
 // @Failure 500 {object} model.BaseResponse
 // @Router /api/auth/login [post]
 func Login(c *gin.Context) {
-	username := c.PostForm("username")
-	password := c.PostForm("password")
-
-	if username != "admin" || password != "password" {
-		c.JSON(401, gin.H{"error": "invalid credentials"})
+	var req model.LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, model.BaseResponse{Success: false, ErrMessage: err.Error()})
 		return
 	}
-	token, _ := generateToken(username)
-	c.JSON(200, gin.H{"token": token})
+	db := database.GetDB()
+	var user model.User
+	if err := db.Where("email = ?", req.Email).First(&user).Error; err != nil {
+		c.JSON(401, model.BaseResponse{Success: false, ErrMessage: "用户不存在"})
+		return
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+		c.JSON(401, model.BaseResponse{Success: false, ErrMessage: "密码错误"})
+		return
+	}
+	accessToken, err := generateTokenWithUserID(user.UserID)
+	if err != nil {
+		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "Token生成失败"})
+		return
+	}
+	refreshToken := generateRefreshToken()
+	expiresAt := time.Now().Add(7 * 24 * time.Hour)
+	if err := db.Create(&model.RefreshToken{
+		UserID:       user.UserID,
+		RefreshToken: refreshToken,
+		ExpiresAt:    expiresAt,
+		Revoked:      false,
+	}).Error; err != nil {
+		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "RefreshToken存储失败"})
+		return
+	}
+	c.JSON(200, model.Response[model.AuthResponse]{
+		Success: true,
+		Data: model.AuthResponse{
+			User:         user,
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		},
+	})
 }
-
-// func RefreshToken(c *gin.Context) {
-// 	tokenStr := c.PostForm("token")
-// 	claims := &Claims{}
-// 	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
-// 		return jwtKey, nil
-// 	})
-
-// 	if err != nil || !token.Valid {
-// 		c.JSON(401, gin.H{"error": "invalid token"})
-// 		return
-// 	}
-
-// 	newToken, _ := generateToken(claims.Username)
-// 	c.JSON(200, gin.H{"token": newToken})
-// }
 
 // Register godoc
 // @Summary 用户注册
@@ -75,7 +78,7 @@ func Login(c *gin.Context) {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param payload body model.UserReqCreate true "注册请求"
+// @Param payload body model.RegisterRequest true "注册请求"
 // @Success 200 {object} model.Response[model.RegisterResponse]
 // @Failure 400 {object} model.BaseResponse
 // @Failure 500 {object} model.BaseResponse
@@ -124,6 +127,18 @@ func Register(c *gin.Context) {
 		return
 	}
 	c.JSON(200, model.Response[model.RegisterResponse]{Success: true, Data: model.RegisterResponse{User: user, Token: token}})
+}
+
+func generateToken(username string) (string, error) {
+	expirationTime := time.Now().Add(24 * time.Hour)
+	claims := &Claims{
+		Username: username,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(jwtKey)
 }
 
 func generateTokenWithUserID(userID int) (string, error) {
@@ -176,4 +191,10 @@ func RevokeRefreshToken(c *gin.Context) {
 	db := database.GetDB()
 	db.Model(&model.RefreshToken{}).Where("refresh_token = ?", req.RefreshToken).Update("revoked", true)
 	c.JSON(200, model.BaseResponse{Success: true})
+}
+
+func generateRefreshToken() string {
+	// Implementation of generateRefreshToken function
+	// This is a placeholder and should be replaced with the actual implementation
+	return ""
 }

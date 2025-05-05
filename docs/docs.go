@@ -231,6 +231,139 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/auth/login": {
+            "post": {
+                "description": "登录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "登录",
+                "parameters": [
+                    {
+                        "description": "登录请求",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response-model_AuthResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/register": {
+            "post": {
+                "description": "用户注册，创建新用户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "用户注册",
+                "parameters": [
+                    {
+                        "description": "注册请求",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response-model_RegisterResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/user/profile": {
+            "get": {
+                "description": "获取当前登录用户信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "获取用户信息",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response-model_User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/comments": {
             "put": {
                 "description": "更新评论内容",
@@ -2869,6 +3002,20 @@ const docTemplate = `{
                 }
             }
         },
+        "model.AuthResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/model.User"
+                }
+            }
+        },
         "model.BaseResponse": {
             "type": "object",
             "properties": {
@@ -3646,6 +3793,21 @@ const docTemplate = `{
                 }
             }
         },
+        "model.LoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Menu": {
             "type": "object",
             "properties": {
@@ -3936,6 +4098,32 @@ const docTemplate = `{
                 }
             }
         },
+        "model.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.RegisterResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/model.User"
+                }
+            }
+        },
         "model.Response-model_Article": {
             "type": "object",
             "properties": {
@@ -3944,6 +4132,31 @@ const docTemplate = `{
                     "allOf": [
                         {
                             "$ref": "#/definitions/model.Article"
+                        }
+                    ]
+                },
+                "errCode": {
+                    "description": "错误码",
+                    "type": "string"
+                },
+                "errMessage": {
+                    "description": "错误信息",
+                    "type": "string"
+                },
+                "success": {
+                    "description": "请求是否成功",
+                    "type": "boolean"
+                }
+            }
+        },
+        "model.Response-model_AuthResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.AuthResponse"
                         }
                     ]
                 },
@@ -4119,6 +4332,31 @@ const docTemplate = `{
                     "allOf": [
                         {
                             "$ref": "#/definitions/model.RefreshToken"
+                        }
+                    ]
+                },
+                "errCode": {
+                    "description": "错误码",
+                    "type": "string"
+                },
+                "errMessage": {
+                    "description": "错误信息",
+                    "type": "string"
+                },
+                "success": {
+                    "description": "请求是否成功",
+                    "type": "boolean"
+                }
+            }
+        },
+        "model.Response-model_RegisterResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.RegisterResponse"
                         }
                     ]
                 },
