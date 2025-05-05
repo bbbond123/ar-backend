@@ -19,7 +19,7 @@ import (
 // @Success 200 {object} model.Response[model.VisitHistory]
 // @Failure 400 {object} model.BaseResponse
 // @Failure 500 {object} model.BaseResponse
-// @Router /api/visit_histories [post]
+// @Router /api/visit_history [post]
 func CreateVisitHistory(c *gin.Context) {
 	var req model.VisitHistoryReqCreate
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -52,7 +52,7 @@ func CreateVisitHistory(c *gin.Context) {
 // @Failure 400 {object} model.BaseResponse
 // @Failure 404 {object} model.BaseResponse
 // @Failure 500 {object} model.BaseResponse
-// @Router /api/visit_histories [put]
+// @Router /api/visit_history [put]
 func UpdateVisitHistory(c *gin.Context) {
 	var req model.VisitHistoryReqEdit
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -85,7 +85,7 @@ func UpdateVisitHistory(c *gin.Context) {
 // @Failure 400 {object} model.BaseResponse
 // @Failure 404 {object} model.BaseResponse
 // @Failure 500 {object} model.BaseResponse
-// @Router /api/visit_histories/{history_id} [delete]
+// @Router /api/visit_history/{history_id} [delete]
 func DeleteVisitHistory(c *gin.Context) {
 	id := c.Param("history_id")
 	historyID, err := strconv.Atoi(id)
@@ -111,7 +111,7 @@ func DeleteVisitHistory(c *gin.Context) {
 // @Success 200 {object} model.Response[model.VisitHistory]
 // @Failure 400 {object} model.BaseResponse
 // @Failure 404 {object} model.BaseResponse
-// @Router /api/visit_histories/{history_id} [get]
+// @Router /api/visit_history/{history_id} [get]
 func GetVisitHistory(c *gin.Context) {
 	id := c.Param("history_id")
 	historyID, err := strconv.Atoi(id)
@@ -137,7 +137,7 @@ func GetVisitHistory(c *gin.Context) {
 // @Param req body model.VisitHistoryReqList true "分页与搜索"
 // @Success 200 {object} model.ListResponse[model.VisitHistory]
 // @Failure 400 {object} model.BaseResponse
-// @Router /api/visit_histories/list [post]
+// @Router /api/visit_history/list [post]
 func ListVisitHistories(c *gin.Context) {
 	var req model.VisitHistoryReqList
 	if err := c.ShouldBindJSON(&req); err != nil {

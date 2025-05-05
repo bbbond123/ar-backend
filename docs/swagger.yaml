@@ -3211,7 +3211,7 @@ paths:
       summary: 获取用户列表
       tags:
       - Users
-  /api/visit_histories:
+  /api/visit_history:
     post:
       consumes:
       - application/json
@@ -3274,7 +3274,7 @@ paths:
       summary: 更新访问记录
       tags:
       - VisitHistories
-  /api/visit_histories/{history_id}:
+  /api/visit_history/{history_id}:
     delete:
       consumes:
       - application/json
@@ -3335,7 +3335,7 @@ paths:
       summary: 获取访问记录
       tags:
       - VisitHistories
-  /api/visit_histories/list:
+  /api/visit_history/list:
     post:
       consumes:
       - application/json

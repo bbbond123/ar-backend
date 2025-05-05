@@ -11,7 +11,7 @@ type VisitHistoryRouter struct{}
 
 // Register 注册访问记录路由
 func (VisitHistoryRouter) Register(r *gin.RouterGroup) {
-	visitHistory := r.Group("/visit_histories")
+	visitHistory := r.Group("/visit_history")
 	{
 		visitHistory.POST("", controller.CreateVisitHistory)
 		visitHistory.PUT("", controller.UpdateVisitHistory)

@@ -2753,7 +2753,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/visit_histories": {
+        "/api/visit_history": {
             "put": {
                 "description": "更新访问记录信息",
                 "consumes": [
@@ -2849,7 +2849,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/visit_histories/list": {
+        "/api/visit_history/list": {
             "post": {
                 "description": "获取访问记录分页列表",
                 "consumes": [
@@ -2889,7 +2889,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/visit_histories/{history_id}": {
+        "/api/visit_history/{history_id}": {
             "get": {
                 "description": "获取单个访问记录",
                 "consumes": [
