@@ -6,6 +6,7 @@ import (
 	"ar-backend/internal/model"
 	"ar-backend/pkg/database"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
@@ -79,14 +80,26 @@ func Login(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param payload body model.RegisterRequest true "注册请求"
-// @Success 200 {object} model.Response[model.RegisterResponse]
+// @Success 200 {object} model.Response[model.AuthResponse]
 // @Failure 400 {object} model.BaseResponse
 // @Failure 500 {object} model.BaseResponse
 // @Router /api/auth/register [post]
 func Register(c *gin.Context) {
-	var req model.UserReqCreate
+	var req model.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, model.BaseResponse{Success: false, ErrMessage: err.Error()})
+		c.JSON(400, model.BaseResponse{Success: false, ErrMessage: "参数错误: " + err.Error()})
+		return
+	}
+
+	// 邮箱格式校验
+	if !govalidator.IsEmail(req.Email) {
+		c.JSON(400, model.BaseResponse{Success: false, ErrMessage: "邮箱格式不正确"})
+		return
+	}
+
+	// 密码强度校验
+	if len(req.Password) < 6 {
+		c.JSON(400, model.BaseResponse{Success: false, ErrMessage: "密码长度不能少于6位"})
 		return
 	}
 
@@ -105,40 +118,42 @@ func Register(c *gin.Context) {
 	}
 
 	user := model.User{
-		Name:        req.Name,
-		NameKana:    req.NameKana,
-		Address:     req.Address,
-		Gender:      &req.Gender,
-		PhoneNumber: req.PhoneNumber,
-		Email:       req.Email,
-		Password:    string(hashedPwd),
-		GoogleID:    req.GoogleID,
-		AppleID:     req.AppleID,
-		Provider:    req.Provider,
-		Status:      req.Status,
+		Email:    req.Email,
+		Password: string(hashedPwd),
+		Provider: "email",
+		Status:   "1",
 	}
 	if err := db.Create(&user).Error; err != nil {
 		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: err.Error()})
 		return
 	}
-	token, err := generateTokenWithUserID(user.UserID)
+
+	accessToken, err := generateTokenWithUserID(user.UserID)
 	if err != nil {
 		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "Token生成失败"})
 		return
 	}
-	c.JSON(200, model.Response[model.RegisterResponse]{Success: true, Data: model.RegisterResponse{User: user, Token: token}})
-}
 
-func generateToken(username string) (string, error) {
-	expirationTime := time.Now().Add(24 * time.Hour)
-	claims := &Claims{
-		Username: username,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expirationTime),
-		},
+	refreshToken := generateRefreshToken()
+	expiresAt := time.Now().Add(7 * 24 * time.Hour)
+	if err := db.Create(&model.RefreshToken{
+		UserID:       user.UserID,
+		RefreshToken: refreshToken,
+		ExpiresAt:    expiresAt,
+		Revoked:      false,
+	}).Error; err != nil {
+		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "RefreshToken存储失败"})
+		return
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtKey)
+
+	c.JSON(200, model.Response[model.AuthResponse]{
+		Success: true,
+		Data: model.AuthResponse{
+			User:         user,
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		},
+	})
 }
 
 func generateTokenWithUserID(userID int) (string, error) {

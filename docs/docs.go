@@ -311,7 +311,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.Response-model_RegisterResponse"
+                            "$ref": "#/definitions/model.Response-model_AuthResponse"
                         }
                     },
                     "400": {
@@ -4101,26 +4101,15 @@ const docTemplate = `{
         "model.RegisterRequest": {
             "type": "object",
             "required": [
-                "password",
-                "username"
+                "email",
+                "password"
             ],
             "properties": {
+                "email": {
+                    "type": "string"
+                },
                 "password": {
                     "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.RegisterResponse": {
-            "type": "object",
-            "properties": {
-                "token": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/model.User"
                 }
             }
         },
@@ -4332,31 +4321,6 @@ const docTemplate = `{
                     "allOf": [
                         {
                             "$ref": "#/definitions/model.RefreshToken"
-                        }
-                    ]
-                },
-                "errCode": {
-                    "description": "错误码",
-                    "type": "string"
-                },
-                "errMessage": {
-                    "description": "错误信息",
-                    "type": "string"
-                },
-                "success": {
-                    "description": "请求是否成功",
-                    "type": "boolean"
-                }
-            }
-        },
-        "model.Response-model_RegisterResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "description": "数据",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/model.RegisterResponse"
                         }
                     ]
                 },

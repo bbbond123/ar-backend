@@ -834,20 +834,13 @@ definitions:
     type: object
   model.RegisterRequest:
     properties:
+      email:
+        type: string
       password:
         type: string
-      username:
-        type: string
     required:
+    - email
     - password
-    - username
-    type: object
-  model.RegisterResponse:
-    properties:
-      token:
-        type: string
-      user:
-        $ref: '#/definitions/model.User'
     type: object
   model.Response-model_Article:
     properties:
@@ -982,22 +975,6 @@ definitions:
       data:
         allOf:
         - $ref: '#/definitions/model.RefreshToken'
-        description: 数据
-      errCode:
-        description: 错误码
-        type: string
-      errMessage:
-        description: 错误信息
-        type: string
-      success:
-        description: 请求是否成功
-        type: boolean
-    type: object
-  model.Response-model_RegisterResponse:
-    properties:
-      data:
-        allOf:
-        - $ref: '#/definitions/model.RegisterResponse'
         description: 数据
       errCode:
         description: 错误码
@@ -1590,7 +1567,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.Response-model_RegisterResponse'
+            $ref: '#/definitions/model.Response-model_AuthResponse'
         "400":
           description: Bad Request
           schema:
