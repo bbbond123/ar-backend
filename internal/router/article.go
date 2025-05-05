@@ -11,10 +11,10 @@ import (
 type ArticleRouter struct{}
 
 // Register 注册文章路由
-func (ArticleRouter) Register(r *gin.RouterGroup) {
-	article := r.Group("/articles")
-	article.GET(":article_id", controller.GetArticle)
-	article.POST("/list", controller.ListArticles)
+func (ArticleRouter) Register(api *gin.RouterGroup) {
+	article := api.Group("/articles")
+	api.GET("/articles/:article_id", controller.GetArticle)
+	api.POST("/articles/list", controller.ListArticles)
 
 	aritcleAuth := article.Group("/articles")
 	aritcleAuth.Use(middleware.JWTAuth())
