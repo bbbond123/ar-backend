@@ -3,6 +3,7 @@ package controller
 import (
 	"ar-backend/internal/model"
 	"ar-backend/pkg/database"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -229,7 +230,7 @@ func AddTagToStore(c *gin.Context) {
 		return
 	}
 
-	println("tagging", tagging)
+	fmt.Printf("tagging: %+v\n", tagging)
 
 	// 查询添加标签后的商铺信息
 	var store model.Store
@@ -268,8 +269,7 @@ func RemoveTagFromStore(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Tag removed from store"})
 }
 
-func parseUint(s string) uint {
-	var id uint64
-	id, _ = strconv.ParseUint(s, 10, 64)
-	return uint(id)
+func parseUint(s string) int {
+	id, _ := strconv.Atoi(s)
+	return id
 }

@@ -16,11 +16,11 @@ func (StoreRouter) Register(r *gin.RouterGroup) {
 		Store.POST("", controller.CreateStore)
 		Store.PUT("", controller.UpdateStore)
 		Store.DELETE(":token_id", controller.DeleteStore)
-		Store.GET(":token_id", controller.GetStore)
+		Store.GET(":token_id", controller.GetStore) //
 		Store.POST("/list", controller.ListStores)
-		Store.GET(":store_id/tags", controller.GetTagsByStore)
-		Store.POST(":store_id/tags", controller.AddTagToStore)
-		Store.DELETE(":store_id/tags/:tag_id", controller.RemoveTagFromStore)
+		// Store.GET(":store_id/tags", controller.GetTagsByStore)
+		// Store.POST(":store_id/tags", controller.AddTagToStore) //
+		// Store.DELETE(":store_id/tags/:tag_id", controller.RemoveTagFromStore)
 	}
 }
 
