@@ -4,21 +4,6 @@ import (
 	"time"
 )
 
-// Facility 表示数据库中的 facilities 表
-// 数据库表结构
-// CREATE TABLE facilities (
-//
-//	facility_id SERIAL PRIMARY KEY,
-//	facility_name VARCHAR(255) NOT NULL,
-//	location VARCHAR(255) NOT NULL,
-//	description_text TEXT,
-//	latitude DECIMAL(10,6) NOT NULL,
-//	longitude DECIMAL(10,6) NOT NULL,
-//	person_id INTEGER,
-//	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-//	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-//
-// );
 type Facility struct {
 	FacilityID      int       `gorm:"column:facility_id;primaryKey" json:"facility_id"`                     // 设施ID
 	FacilityName    string    `gorm:"column:facility_name;type:varchar(255);not null" json:"facility_name"` // 设施名
