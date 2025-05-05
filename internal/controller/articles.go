@@ -6,7 +6,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"strings"
+
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // CreateArticle godoc
@@ -18,15 +21,37 @@ import (
 // @Param article body model.ArticleReqCreate true "文章信息"
 // @Success 200 {object} model.Response[model.Article]
 // @Failure 400 {object} model.BaseResponse
+// @Failure 401 {object} model.BaseResponse
 // @Failure 500 {object} model.BaseResponse
+// @Security ApiKeyAuth
 // @Router /api/articles [post]
 func CreateArticle(c *gin.Context) {
+	// 1. 获取并校验access token
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		c.JSON(401, model.BaseResponse{Success: false, ErrMessage: "未登录，缺少token"})
+		return
+	}
+	tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+	type UserIDClaims struct {
+		UserID int `json:"user_id"`
+		jwt.RegisteredClaims
+	}
+	claims := &UserIDClaims{}
+	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secretKey), nil
+	})
+	if err != nil || !token.Valid {
+		c.JSON(401, model.BaseResponse{Success: false, ErrMessage: "token无效或已过期"})
+		return
+	}
+	// 2. 解析请求体
 	var req model.ArticleReqCreate
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, model.BaseResponse{Success: false, ErrMessage: err.Error()})
 		return
 	}
-
+	// 3. 创建文章
 	article := model.Article{
 		Title:        req.Title,
 		BodyText:     req.BodyText,
@@ -34,6 +59,7 @@ func CreateArticle(c *gin.Context) {
 		LikeCount:    req.LikeCount,
 		ArticleImage: req.ArticleImage,
 		CommentCount: req.CommentCount,
+		// 可选：UserID: claims.UserID,
 	}
 	db := database.GetDB()
 	if err := db.Create(&article).Error; err != nil {

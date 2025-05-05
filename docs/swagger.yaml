@@ -1433,10 +1433,16 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/model.BaseResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/model.BaseResponse'
+      security:
+      - ApiKeyAuth: []
       summary: 新建文章
       tags:
       - Articles
