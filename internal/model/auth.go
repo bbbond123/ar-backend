@@ -36,3 +36,7 @@ type RefreshTokenResponse struct {
 type RevokeTokenRequest struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
+
+type GoogleAuthRequest struct {
+	IdToken string `json:"id_token" binding:"required"`
+}
