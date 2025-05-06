@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"fmt"
+	"math/rand"
 	"time"
 
 	"ar-backend/internal/model"
@@ -109,11 +111,27 @@ func Register(c *gin.Context) {
 	}
 
 	db := database.GetDB()
-	var count int64
-	db.Model(&model.User{}).Where("email = ?", req.Email).Count(&count)
-	if count > 0 {
-		c.JSON(400, model.BaseResponse{Success: false, ErrMessage: "邮箱已被注册"})
-		return
+	var user model.User
+	if err := db.Where("email = ?", req.Email).First(&user).Error; err == nil {
+		// 已存在该邮箱
+		if user.Status == "pending" {
+			// 未激活，更新验证码和过期时间
+			verifyCode := fmt.Sprintf("%04d", rand.Intn(10000))
+			verifyExpire := time.Now().Add(10 * time.Minute)
+			user.VerifyCode = verifyCode
+			user.VerifyCodeExpire = &verifyExpire
+			if err := db.Save(&user).Error; err != nil {
+				c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "验证码更新失败: " + err.Error()})
+				return
+			}
+			// TODO: 发送验证码到邮箱 user.Email，内容为 verifyCode
+			// sendVerifyCodeToEmail(user.Email, verifyCode)
+			c.JSON(200, model.BaseResponse{Success: true, ErrMessage: "验证码已重新发送，请查收邮箱"})
+			return
+		} else {
+			c.JSON(400, model.BaseResponse{Success: false, ErrMessage: "邮箱已被注册"})
+			return
+		}
 	}
 
 	hashedPwd, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
@@ -122,16 +140,25 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	user := model.User{
-		Email:    req.Email,
-		Password: string(hashedPwd),
-		Provider: "email",
-		Status:   "1",
+	// 生成4位验证码
+	verifyCode := fmt.Sprintf("%04d", rand.Intn(10000))
+	verifyExpire := time.Now().Add(10 * time.Minute)
+
+	user = model.User{
+		Email:            req.Email,
+		Password:         string(hashedPwd),
+		Provider:         "email",
+		Status:           "pending", // 注册后状态为pending，待激活
+		VerifyCode:       verifyCode,
+		VerifyCodeExpire: &verifyExpire,
 	}
 	if err := db.Create(&user).Error; err != nil {
 		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: err.Error()})
 		return
 	}
+
+	// TODO: 发送验证码到邮箱 user.Email，内容为 verifyCode
+	// sendVerifyCodeToEmail(user.Email, verifyCode)
 
 	accessToken, err := generateAccessToken(user.UserID)
 	if err != nil {

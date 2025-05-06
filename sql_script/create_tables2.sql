@@ -144,11 +144,13 @@ CREATE TABLE users (
     google_id VARCHAR(255),                           -- GoogleログインのユニークID（半角、可空）
     apple_id VARCHAR(255),                            -- AppleログインのユニークID（半角、可空）
     provider VARCHAR(20) NOT NULL,                    -- ログイン方式: email, google, apple（半角）
-    status VARCHAR(1) NOT NULL,                       -- アカウント状態: 1=有効、0=無効、2=凍結（半角）
+    verify_code VARCHAR(255),                         -- 検証コード（半角、可空）
+    verify_code_expire TIMESTAMP,                     -- 検証コード有効期限（半角、可空）
+    status VARCHAR(20) NOT NULL,                       -- アカウント状態: 1=有効、0=無効、2=凍結（半角）
     created_at TIMESTAMP NOT NULL,                     -- 登録日
     updated_at TIMESTAMP,                              -- 更新日
     CONSTRAINT chk_gender CHECK (gender IN ('1', '2') OR gender IS NULL), -- 性別チェック制約
-    CONSTRAINT chk_status CHECK (status IN ('0', '1', '2')), -- ステータスチェック制約
+    CONSTRAINT chk_status CHECK (status IN ('pending', 'active', 'disabled')), -- ステータスチェック制約
     CONSTRAINT chk_provider CHECK (provider IN ('email', 'google', 'apple')), -- ログイン方式チェック制約
     CONSTRAINT unique_email UNIQUE (email)             -- メールアドレスのユニーク制約
 );
@@ -167,7 +169,7 @@ COMMENT ON COLUMN users.password IS 'パスワード（半角、可空、メー�
 COMMENT ON COLUMN users.google_id IS 'GoogleログインのユニークID（半角、可空）';
 COMMENT ON COLUMN users.apple_id IS 'AppleログインのユニークID（半角、可空）';
 COMMENT ON COLUMN users.provider IS 'ログイン方式: email, google, apple（半角）';
-COMMENT ON COLUMN users.status IS 'アカウント状態: 1=有効、0=無効、2=凍結（半角）';
+COMMENT ON COLUMN users.status IS 'アカウント状態: active=アクティブ、pending=未アクティブ、disabled=無効';
 COMMENT ON COLUMN users.created_at IS '登録日';
 COMMENT ON COLUMN users.updated_at IS '更新日';
 

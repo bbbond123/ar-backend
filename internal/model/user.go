@@ -4,21 +4,23 @@ import "time"
 
 // User 表示数据库中的 users 表
 type User struct {
-	UserID      int        `gorm:"column:user_id;primaryKey" json:"user_id"`
-	Name        string     `gorm:"column:name" json:"name"`
-	NameKana    string     `gorm:"column:name_kana" json:"name_kana"`
-	Birth       *time.Time `gorm:"column:birth" json:"birth"`
-	Address     string     `gorm:"column:address" json:"address"`
-	Gender      *string    `gorm:"column:gender" json:"gender"`
-	PhoneNumber string     `gorm:"column:phone_number" json:"phone_number"`
-	Email       string     `gorm:"column:email;not null;unique" json:"email"`
-	Password    string     `gorm:"column:password" json:"password"`
-	GoogleID    string     `gorm:"column:google_id" json:"google_id"`
-	AppleID     string     `gorm:"column:apple_id" json:"apple_id"`
-	Provider    string     `gorm:"column:provider;not null" json:"provider"`
-	Status      string     `gorm:"column:status;not null" json:"status"`
-	CreatedAt   time.Time  `gorm:"column:created_at" json:"created_at"`
-	UpdatedAt   *time.Time `gorm:"column:updated_at" json:"updated_at"`
+	UserID           int        `gorm:"column:user_id;primaryKey" json:"user_id"`
+	Name             string     `gorm:"column:name" json:"name"`
+	NameKana         string     `gorm:"column:name_kana" json:"name_kana"`
+	Birth            *time.Time `gorm:"column:birth" json:"birth"`
+	Address          string     `gorm:"column:address" json:"address"`
+	Gender           *string    `gorm:"column:gender" json:"gender"`
+	PhoneNumber      string     `gorm:"column:phone_number" json:"phone_number"`
+	Email            string     `gorm:"column:email;not null;unique" json:"email"`
+	Password         string     `gorm:"column:password" json:"password"`
+	GoogleID         string     `gorm:"column:google_id" json:"google_id"`
+	AppleID          string     `gorm:"column:apple_id" json:"apple_id"`
+	Provider         string     `gorm:"column:provider;not null" json:"provider"`
+	Status           string     `gorm:"column:status;not null" json:"status"`
+	VerifyCode       string     `gorm:"column:verify_code" json:"verify_code"`
+	VerifyCodeExpire *time.Time `gorm:"column:verify_code_expire" json:"verify_code_expire"`
+	CreatedAt        time.Time  `gorm:"column:created_at" json:"created_at"`
+	UpdatedAt        *time.Time `gorm:"column:updated_at" json:"updated_at"`
 }
 
 // UserReqCreate 用户创建请求
