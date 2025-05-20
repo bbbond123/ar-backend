@@ -1,12 +1,11 @@
 package main
 
 import (
+	"ar-backend/internal/auth"
 	"ar-backend/internal/model"
-	"ar-backend/internal/router"
+	server "ar-backend/internal/service"
 	"ar-backend/pkg/database"
-
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
+	"net/http"
 
 	_ "ar-backend/docs" // Swagger 文档自动生成 (swag init 生成的)
 )
@@ -37,11 +36,18 @@ func main() {
 	)
 
 	// 初始化 Gin 路由
-	r := router.InitRouter()
+	// r := router.InitRouter()
+	// r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// 注册 Swagger 文档路由
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	auth.NewAuth()
+	server := server.NewServer(db)
+
+	err := server.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		panic("cannot start server")
+	}
 
 	// 启动 HTTP 服务
-	r.Run(":8080") // 默认端口 8080
+	// r.Run(":8080") // 默认端口 8080
+
 }

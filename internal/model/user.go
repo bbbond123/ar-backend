@@ -13,6 +13,7 @@ type User struct {
 	PhoneNumber      string     `gorm:"column:phone_number" json:"phone_number"`
 	Email            string     `gorm:"column:email;not null;unique" json:"email"`
 	Password         string     `gorm:"column:password" json:"password"`
+	Avatar           string     `gorm:"column:avatar" json:"avatar"`
 	GoogleID         string     `gorm:"column:google_id" json:"google_id"`
 	AppleID          string     `gorm:"column:apple_id" json:"apple_id"`
 	Provider         string     `gorm:"column:provider;not null" json:"provider"`
