@@ -4927,6 +4927,9 @@ const docTemplate = `{
                 "apple_id": {
                     "type": "string"
                 },
+                "avatar": {
+                    "type": "string"
+                },
                 "birth": {
                     "type": "string"
                 },

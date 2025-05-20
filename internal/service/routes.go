@@ -2,6 +2,7 @@ package server
 
 import (
 	"ar-backend/internal/model"
+	"ar-backend/internal/router"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
@@ -20,8 +21,21 @@ import (
 // 假设你有一个 JWT secret
 var jwtSecret = []byte("your_secret_key")
 
+// RouteRegister 路由注册器接口
+type RouteRegister interface {
+	Register(r *gin.RouterGroup)
+}
+
+var routeRegisters []RouteRegister
+
+// Register 注册路由模块
+func Register(rr RouteRegister) {
+	routeRegisters = append(routeRegisters, rr)
+}
+
 func (s *Server) RegisterRoutes() http.Handler {
-	r := gin.Default()
+	// r := gin.Default()
+	r := router.InitRouter()
 
 	// CORS 配置
 	corsConfig := cors.Config{
