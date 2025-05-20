@@ -292,22 +292,35 @@ func RefreshToken(c *gin.Context) {
 // @Failure 500 {object} model.BaseResponse
 // @Router /api/auth/logout [post]
 func RevokeRefreshToken(c *gin.Context) {
-	var req model.RevokeTokenRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, model.BaseResponse{Success: false, ErrMessage: err.Error()})
-		return
-	}
-	db := database.GetDB()
-	result := db.Model(&model.RefreshToken{}).Where("refresh_token = ? AND revoked = false", req.RefreshToken).Update("revoked", true)
-	if result.Error != nil {
-		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: result.Error.Error()})
-		return
-	}
-	if result.RowsAffected == 0 {
-		c.JSON(400, model.BaseResponse{Success: false, ErrMessage: "无效或已撤销的refresh token"})
-		return
-	}
-	c.JSON(200, model.BaseResponse{Success: true})
+
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "token",
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   false, // 生产环境要 true
+		SameSite: http.SameSiteLaxMode,
+	})
+	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
+
+	// var req model.RevokeTokenRequest
+	// if err := c.ShouldBindJSON(&req); err != nil {
+	// 	c.JSON(400, model.BaseResponse{Success: false, ErrMessage: err.Error()})
+	// 	return
+	// }
+	// db := database.GetDB()
+	// result := db.Model(&model.RefreshToken{}).Where("refresh_token = ? AND revoked = false", req.RefreshToken).Update("revoked", true)
+	// if result.Error != nil {
+	// 	c.JSON(500, model.BaseResponse{Success: false, ErrMessage: result.Error.Error()})
+	// 	return
+	// }
+	// if result.RowsAffected == 0 {
+	// 	c.JSON(400, model.BaseResponse{Success: false, ErrMessage: "无效或已撤销的refresh token"})
+	// 	return
+	// }
+	// c.JSON(200, model.BaseResponse{Success: true})
 }
 
 // GoogleUserInfo 用于解析Google返回的用户信息

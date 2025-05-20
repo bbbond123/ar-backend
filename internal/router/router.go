@@ -27,7 +27,7 @@ func InitRouter() *gin.Engine {
 	api.POST("/login", controller.Login)
 	api.POST("/register", controller.Register)
 	api.POST("/refresh", controller.RefreshToken)
-	// api.POST("/logout", controller.RevokeRefreshToken)
+	api.POST("/logout", controller.RevokeRefreshToken)
 
 	// 注册所有模块路由
 	for _, rr := range routeRegisters {

@@ -21,18 +21,6 @@ import (
 // 假设你有一个 JWT secret
 var jwtSecret = []byte("your_secret_key")
 
-// RouteRegister 路由注册器接口
-type RouteRegister interface {
-	Register(r *gin.RouterGroup)
-}
-
-var routeRegisters []RouteRegister
-
-// Register 注册路由模块
-func Register(rr RouteRegister) {
-	routeRegisters = append(routeRegisters, rr)
-}
-
 func (s *Server) RegisterRoutes() http.Handler {
 	// r := gin.Default()
 	r := router.InitRouter()
@@ -54,10 +42,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.GET("/api/auth/:provider/callback", s.getAuthCallbackFunction)
 	r.GET("/api/me", s.MeHandler)
 
+	// r.POST("/api/logout", s.LogoutHandler)
 	// Swagger 文档
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
-	r.POST("/api/logout", s.LogoutHandler)
 
 	return r
 }
