@@ -338,6 +338,13 @@ definitions:
     - page
     - page_size
     type: object
+  model.GoogleAuthRequest:
+    properties:
+      id_token:
+        type: string
+    required:
+    - id_token
+    type: object
   model.Language:
     properties:
       created_at:
@@ -1272,6 +1279,10 @@ definitions:
         type: string
       user_id:
         type: integer
+      verify_code:
+        type: string
+      verify_code_expire:
+        type: string
     type: object
   model.UserReqCreate:
     properties:
@@ -1570,6 +1581,36 @@ paths:
       summary: 获取文章列表
       tags:
       - Articles
+  /api/auth/google:
+    post:
+      consumes:
+      - application/json
+      description: Google社交登录/注册
+      parameters:
+      - description: Google登录请求
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.GoogleAuthRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response-model_AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.BaseResponse'
+      summary: Google社交登录/注册
+      tags:
+      - Auth
   /api/auth/login:
     post:
       consumes:

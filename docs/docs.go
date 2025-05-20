@@ -264,6 +264,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/auth/google": {
+            "post": {
+                "description": "Google社交登录/注册",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Google社交登录/注册",
+                "parameters": [
+                    {
+                        "description": "Google登录请求",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.GoogleAuthRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response-model_AuthResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/model.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/auth/login": {
             "post": {
                 "description": "登录",
@@ -3515,6 +3561,17 @@ const docTemplate = `{
                 }
             }
         },
+        "model.GoogleAuthRequest": {
+            "type": "object",
+            "required": [
+                "id_token"
+            ],
+            "properties": {
+                "id_token": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Language": {
             "type": "object",
             "properties": {
@@ -4908,6 +4965,12 @@ const docTemplate = `{
                 },
                 "user_id": {
                     "type": "integer"
+                },
+                "verify_code": {
+                    "type": "string"
+                },
+                "verify_code_expire": {
+                    "type": "string"
                 }
             }
         },
