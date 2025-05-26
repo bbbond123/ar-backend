@@ -6,7 +6,10 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"net/http"
+	"net/url"
+	"os"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -111,17 +114,40 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 		c.String(http.StatusInternalServerError, "Could not create token")
 		return
 	}
-	// 设置 Cookie
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "token",
-		Value:    tokenString,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   false, // 本地开发用 false，生产环境要 true
-		SameSite: http.SameSiteLaxMode,
+
+	// 获取深层链接
+	redirectURL := os.Getenv("MOBILE_REDIRECT_URL")
+	if redirectURL == "" {
+		redirectURL = "com.travelview.app:/oauth2redirect/google" // 默认深层链接
+	}
+
+	// 通过查询参数返回 token
+	redirectURLWithToken := fmt.Sprintf("%s?token=%s", redirectURL, url.QueryEscape(tokenString))
+
+	// 返回 JSON 响应（推荐）
+	c.JSON(http.StatusOK, gin.H{
+		"token":       tokenString,
+		"redirectURL": redirectURLWithToken,
+		"user": gin.H{
+			"email":   userInDB.Email,
+			"name":    userInDB.Name,
+			"avatar":  userInDB.Avatar,
+			"user_id": userInDB.UserID,
+		},
 	})
-	// 重定向到前端
-	c.Redirect(http.StatusFound, "http://localhost:5173")
+
+	// 前端返回 token 和 redirectURL
+	// // 设置 Cookie
+	// http.SetCookie(c.Writer, &http.Cookie{
+	// 	Name:     "token",
+	// 	Value:    tokenString,
+	// 	Path:     "/",
+	// 	HttpOnly: true,
+	// 	Secure:   false, // 本地开发用 false，生产环境要 true
+	// 	SameSite: http.SameSiteLaxMode,
+	// })
+	// // 重定向到前端
+	// c.Redirect(http.StatusFound, "https://api.ifoodme.com/")
 }
 
 func (s *Server) beginAuthProviderCallback(c *gin.Context) {

@@ -24,7 +24,8 @@ function App() {
   }, []);
 
   const handleLogin = () => {
-    window.location.href = "http://localhost:3000/api/auth/google";
+    // window.location.href = "http://localhost:3000/api/auth/google";
+    window.location.href = "https://api.ifoodme.com/api/auth/google";
   };
 
   if (loading) return <div>Loading...</div>;
