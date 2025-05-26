@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"os"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -116,7 +115,7 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 	}
 
 	// 获取深层链接
-	redirectURL := os.Getenv("MOBILE_REDIRECT_URL")
+	redirectURL := "com.travelview.app"
 	if redirectURL == "" {
 		redirectURL = "com.travelview.app:/oauth2redirect/google" // 默认深层链接
 	}
