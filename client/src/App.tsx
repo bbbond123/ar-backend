@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { fetchMe, logout } from "./api";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
+import GoogleLoginButton from "./components/GoogleLoginButton";
 import "./App.css";
 
 type User = {
@@ -23,10 +24,10 @@ function App() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleLogin = () => {
-    // window.location.href = "http://localhost:3000/api/auth/google";
-    window.location.href = "https://api.ifoodme.com/api/auth/google";
-  };
+  // const handleLogin = () => {
+  //   // window.location.href = "http://localhost:3000/api/auth/google";
+  //   window.location.href = process.env.VITE_API_URL + "api/auth/google";
+  // };
 
   if (loading) return <div>Loading...</div>;
 
@@ -42,12 +43,10 @@ function App() {
             <img src={reactLogo} className="logo react" alt="React logo" />
           </a>
         </div>
-        <div>
+        {/* <div>
           <button onClick={handleLogin}>使用 Google 登录</button>
-        </div>
-        <p className="read-the-docs">
-          Click on the Vite and React logos to learn more
-        </p>
+        </div> */}
+        <GoogleLoginButton />
       </>
     );
   }

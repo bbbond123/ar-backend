@@ -1,0 +1,10 @@
+
+https://api.ifoodme.com/
+
+
+
+https://api.ifoodme.com/api/auth/google/callback?state=T0-2sg3MqskOUKXyg_43aYafJ2GiHFwbE20GAt_4lOl0szBg3HJyTd8Vu1sF1v4fCC94NvLbDBPJ4nBVeoaExA%3D%3D&code=4%2F0AUJR-x5265ESOY0C2389l9a-5J-8OOVHiDPLrEE8payI0DGXwZ8JkYswdPf-JZXskoAqHw&scope=email+openid+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email&authuser=0&prompt=none
+
+```json
+{"redirectURL":"com.travelview.app?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS0vQUxWLVVqVk0xQ3l1M29velc4QWFFV3RvT2NZaTlCOS1QVEFUM2VQSWl5WU5nWldGME5aUGFwODk9czk2LWMiLCJlbWFpbCI6Indhbmd5aWJ1MTIzQGdtYWlsLmNvbSIsImV4cCI6MTc0ODQ0NTMzNSwibmFtZSI6IiIsInVzZXJfaWQiOjF9.XMHx7iY7juBvCC62YMlncsYoAZLmW1KA2K01SYVsrA0","token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdmF0YXIiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS0vQUxWLVVqVk0xQ3l1M29velc4QWFFV3RvT2NZaTlCOS1QVEFUM2VQSWl5WU5nWldGME5aUGFwODk9czk2LWMiLCJlbWFpbCI6Indhbmd5aWJ1MTIzQGdtYWlsLmNvbSIsImV4cCI6MTc0ODQ0NTMzNSwibmFtZSI6IiIsInVzZXJfaWQiOjF9.XMHx7iY7juBvCC62YMlncsYoAZLmW1KA2K01SYVsrA0","user":{"avatar":"https://lh3.googleusercontent.com/a-/ALV-UjVM1Cyu3oozW8AaEWtoOcYi9B9-PTAT3ePIiyYNgZWF0NZPap89=s96-c","email":"wangyibu123@gmail.com","name":"","user_id":1}}
+```
