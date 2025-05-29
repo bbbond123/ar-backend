@@ -39,6 +39,13 @@ func NewAuth() {
 	fmt.Printf("googleClientId: %s\n", googleClientId)
 	fmt.Printf("callbackURL: %s\n", callbackURL)
 	fmt.Printf("isProd: %v\n", isProd)
+	fmt.Printf("Cookie Secure: %v\n", isProd)
+	fmt.Printf("Cookie SameSite: %v\n", func() string {
+		if isProd {
+			return "None"
+		}
+		return "Lax"
+	}())
 
 	store := sessions.NewCookieStore([]byte(key))
 	store.MaxAge(MaxAge)
@@ -46,7 +53,14 @@ func NewAuth() {
 	store.Options.Path = "/"
 	store.Options.HttpOnly = true
 	store.Options.Secure = isProd
-	store.Options.SameSite = http.SameSiteNoneMode // 生产环境跨域需要 None
+
+	// 根据环境设置 SameSite
+	if isProd {
+		store.Options.SameSite = http.SameSiteNoneMode // 生产环境跨域需要 None
+	} else {
+		store.Options.SameSite = http.SameSiteLaxMode // 本地开发用 Lax
+	}
+
 	// 生产环境下不设置域名，让浏览器自动处理
 	// if isProd {
 	// 	store.Options.Domain = ".ifoodme.com" // 允许子域名共享
