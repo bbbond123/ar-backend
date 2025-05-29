@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -121,27 +122,17 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 		return
 	}
 
-	// 获取深层链接
-	redirectURL := "com.travelview.app"
-	if redirectURL == "" {
-		redirectURL = "com.travelview.app:/oauth2redirect/google" // 默认深层链接
-	}
-
 	// 设置 Cookie
 	cookie := &http.Cookie{
 		Name:     "token",
 		Value:    tokenString,
 		Path:     "/",
-		HttpOnly: true,
+		HttpOnly: false,                 // 改为 false，让前端JS能访问
 		Secure:   true,                  // 生产环境用 true（HTTPS）
 		SameSite: http.SameSiteNoneMode, // 跨域需要 None
 	}
 
-	// 混合环境下不设置域名，让浏览器自动处理
-	// if c.Request.Host == "api.ifoodme.com" {
-	// 	cookie.Domain = ".ifoodme.com"
-	// }
-
+	// 不设置域名，让浏览器自动处理
 	http.SetCookie(c.Writer, cookie)
 
 	// 动态获取前端重定向地址
@@ -178,6 +169,9 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 			}
 		}
 	}
+
+	// 同时将token作为URL参数传递，让前端可以获取并存储
+	frontendURL += "?token=" + url.QueryEscape(tokenString)
 
 	fmt.Printf("重定向到: %s\n", frontendURL)
 
