@@ -27,7 +27,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// CORS 配置
 	corsConfig := cors.Config{
-		AllowOrigins:     []string{"https://*", "http://*"},
+		AllowOrigins:     []string{"https://ifoodme.com", "https://www.ifoodme.com", "https://api.ifoodme.com"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Accept", "Authorization", "Content-Type"},
 		AllowCredentials: true,
@@ -125,12 +125,12 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 		Value:    tokenString,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   false, // 本地开发用 false，生产环境要 true
-		SameSite: http.SameSiteLaxMode,
+		Secure:   true,                  // 生产环境用 true（HTTPS）
+		SameSite: http.SameSiteNoneMode, // 跨域需要 None
 	})
 
 	// 重定向到前端首页
-	c.Redirect(http.StatusFound, "http://localhost:5173/")
+	c.Redirect(http.StatusFound, "https://ifoodme.com/")
 }
 
 func (s *Server) beginAuthProviderCallback(c *gin.Context) {
@@ -188,8 +188,8 @@ func (s *Server) LogoutHandler(c *gin.Context) {
 		Expires:  time.Unix(0, 0),
 		MaxAge:   -1,
 		HttpOnly: true,
-		Secure:   false, // 生产环境要 true
-		SameSite: http.SameSiteLaxMode,
+		Secure:   true, // 生产环境要 true
+		SameSite: http.SameSiteNoneMode,
 	})
 	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
 }
