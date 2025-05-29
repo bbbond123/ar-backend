@@ -138,32 +138,17 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 	// 动态获取前端重定向地址
 	var frontendURL string
 
-	// 1. 优先从 Referer 头获取（前端发起登录请求的地址）
-	referer := c.GetHeader("Referer")
-	if referer != "" {
-		// 安全检查：只允许特定的域名
-		allowedDomains := []string{
-			"http://localhost:5173",
-			"http://localhost:3000",
-			"https://ifoodme.com",
-			"https://www.ifoodme.com",
-		}
-
-		for _, domain := range allowedDomains {
-			if strings.HasPrefix(referer, domain) {
-				frontendURL = referer
-				break
-			}
-		}
-	}
-
-	// 2. 如果 Referer 不可用，使用环境变量
+	// 1. 优先从环境变量获取
+	frontendURL = os.Getenv("FRONTEND_URL")
 	if frontendURL == "" {
-		frontendURL = os.Getenv("FRONTEND_URL")
-		if frontendURL == "" {
-			// 3. 默认地址，根据环境判断
-			if os.Getenv("ENVIRONMENT") == "production" {
-				frontendURL = "https://ifoodme.com/"
+		// 2. 根据环境判断默认地址
+		if os.Getenv("ENVIRONMENT") == "production" {
+			frontendURL = "https://www.ifoodme.com/"
+		} else {
+			// 3. 开发环境下，尝试从 Referer 头获取
+			referer := c.GetHeader("Referer")
+			if referer != "" && strings.HasPrefix(referer, "http://localhost:5173") {
+				frontendURL = "http://localhost:5173/"
 			} else {
 				frontendURL = "http://localhost:5173/"
 			}
