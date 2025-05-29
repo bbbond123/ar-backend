@@ -7,7 +7,7 @@ const GoogleLoginButton: React.FC = () => {
     const redirectParam = encodeURIComponent(currentURL);
     
     // 根据环境判断后端地址
-    const apiBaseUrl = import.meta.env.VITE_API_URL;
+    const apiBaseUrl = import.meta.env.VITE_API_URL || "https://api.ifoodme.com/";
     
     // 直接跳转到后端的 Google 登录接口
     window.location.href = `${apiBaseUrl}api/auth/google?redirect=${redirectParam}`;
