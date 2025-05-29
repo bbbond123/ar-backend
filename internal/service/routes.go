@@ -6,7 +6,10 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -27,7 +30,13 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// CORS 配置
 	corsConfig := cors.Config{
-		AllowOrigins:     []string{"https://ifoodme.com", "https://www.ifoodme.com", "https://api.ifoodme.com"},
+		AllowOrigins: []string{
+			"https://ifoodme.com",
+			"https://www.ifoodme.com",
+			"https://api.ifoodme.com",
+			"http://localhost:5173", // 允许本地前端
+			"http://localhost:3000", // 允许本地后端
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Accept", "Authorization", "Content-Type"},
 		AllowCredentials: true,
@@ -128,15 +137,52 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 		SameSite: http.SameSiteNoneMode, // 跨域需要 None
 	}
 
-	// 生产环境设置域名
-	if c.Request.Host == "api.ifoodme.com" {
-		cookie.Domain = ".ifoodme.com"
-	}
+	// 混合环境下不设置域名，让浏览器自动处理
+	// if c.Request.Host == "api.ifoodme.com" {
+	// 	cookie.Domain = ".ifoodme.com"
+	// }
 
 	http.SetCookie(c.Writer, cookie)
 
+	// 动态获取前端重定向地址
+	var frontendURL string
+
+	// 1. 优先从 Referer 头获取（前端发起登录请求的地址）
+	referer := c.GetHeader("Referer")
+	if referer != "" {
+		// 安全检查：只允许特定的域名
+		allowedDomains := []string{
+			"http://localhost:5173",
+			"http://localhost:3000",
+			"https://ifoodme.com",
+			"https://www.ifoodme.com",
+		}
+
+		for _, domain := range allowedDomains {
+			if strings.HasPrefix(referer, domain) {
+				frontendURL = referer
+				break
+			}
+		}
+	}
+
+	// 2. 如果 Referer 不可用，使用环境变量
+	if frontendURL == "" {
+		frontendURL = os.Getenv("FRONTEND_URL")
+		if frontendURL == "" {
+			// 3. 默认地址，根据环境判断
+			if os.Getenv("ENVIRONMENT") == "production" {
+				frontendURL = "https://ifoodme.com/"
+			} else {
+				frontendURL = "http://localhost:5173/"
+			}
+		}
+	}
+
+	fmt.Printf("重定向到: %s\n", frontendURL)
+
 	// 重定向到前端首页
-	c.Redirect(http.StatusFound, "https://ifoodme.com/")
+	c.Redirect(http.StatusFound, frontendURL)
 }
 
 func (s *Server) beginAuthProviderCallback(c *gin.Context) {

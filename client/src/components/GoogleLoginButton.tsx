@@ -2,8 +2,12 @@ import React from "react";
 
 const GoogleLoginButton: React.FC = () => {
   const handleLogin = () => {
-    // 直接重定向到后端的 Google 登录接口
-    window.location.href = "/api/auth/google";
+    // 获取当前前端地址作为重定向参数
+    const currentURL = window.location.origin;
+    const redirectParam = encodeURIComponent(currentURL);
+    
+    // 直接重定向到后端的 Google 登录接口，并传递重定向参数
+    window.location.href = `/api/auth/google?redirect=${redirectParam}`;
   };
 
   return (

@@ -47,9 +47,10 @@ func NewAuth() {
 	store.Options.HttpOnly = true
 	store.Options.Secure = isProd
 	store.Options.SameSite = http.SameSiteNoneMode // 生产环境跨域需要 None
-	if isProd {
-		store.Options.Domain = ".ifoodme.com" // 允许子域名共享
-	}
+	// 生产环境下不设置域名，让浏览器自动处理
+	// if isProd {
+	// 	store.Options.Domain = ".ifoodme.com" // 允许子域名共享
+	// }
 
 	gothic.Store = store
 
