@@ -35,8 +35,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 			"https://ifoodme.com",
 			"https://www.ifoodme.com",
 			"https://api.ifoodme.com",
-			"http://localhost:5173", // 允许本地前端
-			"http://localhost:3000", // 允许本地后端
 		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Accept", "Authorization", "Content-Type"},
@@ -144,14 +142,6 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 		// 2. 根据环境判断默认地址
 		if os.Getenv("ENVIRONMENT") == "production" {
 			frontendURL = "https://www.ifoodme.com/"
-		} else {
-			// 3. 开发环境下，尝试从 Referer 头获取
-			referer := c.GetHeader("Referer")
-			if referer != "" && strings.HasPrefix(referer, "http://localhost:5173") {
-				frontendURL = "http://localhost:5173/"
-			} else {
-				frontendURL = "http://localhost:5173/"
-			}
 		}
 	}
 
