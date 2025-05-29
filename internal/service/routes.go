@@ -23,7 +23,7 @@ import (
 )
 
 // 假设你有一个 JWT secret
-var jwtSecret = []byte("your_secret_key")
+var jwtSecret = []byte("my_secret_key")
 
 func (s *Server) RegisterRoutes() http.Handler {
 	// r := gin.Default()
@@ -188,35 +188,57 @@ func (s *Server) beginAuthProviderCallback(c *gin.Context) {
 }
 
 func (s *Server) MeHandler(c *gin.Context) {
-	cookie, err := c.Request.Cookie("token")
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
+	var tokenStr string
+
+	// 优先从 Authorization Header 读取
+	authHeader := c.GetHeader("Authorization")
+	if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
+		tokenStr = strings.TrimPrefix(authHeader, "Bearer ")
+		fmt.Printf("从Authorization Header获取token: %s...\n", tokenStr[:20])
+	} else {
+		// 从 Cookie 读取
+		cookie, err := c.Request.Cookie("token")
+		if err != nil {
+			fmt.Printf("无法获取token: Authorization Header为空且Cookie读取失败: %v\n", err)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
+		}
+		tokenStr = cookie.Value
+		fmt.Printf("从Cookie获取token: %s...\n", tokenStr[:20])
 	}
-	tokenStr := cookie.Value
+
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		fmt.Printf("JWT验证，使用secret: %s\n", string(jwtSecret))
 		return jwtSecret, nil
 	})
 	if err != nil || !token.Valid {
+		fmt.Printf("JWT验证失败: err=%v, valid=%v\n", err, token.Valid)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
+		fmt.Printf("JWT claims转换失败\n")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 	userID, ok := claims["user_id"].(float64)
 	if !ok {
+		fmt.Printf("无法获取user_id from claims: %v\n", claims)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
+	fmt.Printf("JWT验证成功，user_id: %v\n", userID)
+
 	var user model.User
 	err = s.gormDB.Where("user_id = ?", int(userID)).First(&user).Error
 	if err != nil {
+		fmt.Printf("数据库查询用户失败: %v\n", err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
+	fmt.Printf("用户查询成功: %s\n", user.Email)
+
 	c.JSON(http.StatusOK, gin.H{
 		"user_id":  user.UserID,
 		"email":    user.Email,
