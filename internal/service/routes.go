@@ -71,8 +71,15 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 	r := c.Request.WithContext(ctx)
 	w := c.Writer
 
+	fmt.Printf("OAuth Callback - Provider: %s\n", provider)
+	fmt.Printf("OAuth Callback - Request Host: %s\n", r.Host)
+	fmt.Printf("OAuth Callback - Request Cookies: %v\n", r.Cookies())
+	fmt.Printf("OAuth Callback - State: %s\n", r.URL.Query().Get("state"))
+	fmt.Printf("OAuth Callback - Code: %s\n", r.URL.Query().Get("code"))
+
 	user, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
+		fmt.Printf("OAuth Callback Error: %v\n", err)
 		c.String(http.StatusUnauthorized, "auth error: %v", err)
 		return
 	}
@@ -164,6 +171,11 @@ func (s *Server) beginAuthProviderCallback(c *gin.Context) {
 	ctx := context.WithValue(context.Background(), "provider", provider)
 	r := c.Request.WithContext(ctx)
 	w := c.Writer
+
+	fmt.Printf("Begin Auth - Provider: %s\n", provider)
+	fmt.Printf("Begin Auth - Request Host: %s\n", r.Host)
+	fmt.Printf("Begin Auth - Request Cookies: %v\n", r.Cookies())
+
 	gothic.BeginAuthHandler(w, r)
 }
 
