@@ -118,16 +118,22 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 		redirectURL = "com.travelview.app:/oauth2redirect/google" // 默认深层链接
 	}
 
-	// 前端返回 token 和 redirectURL
 	// 设置 Cookie
-	http.SetCookie(c.Writer, &http.Cookie{
+	cookie := &http.Cookie{
 		Name:     "token",
 		Value:    tokenString,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,                  // 生产环境用 true（HTTPS）
 		SameSite: http.SameSiteNoneMode, // 跨域需要 None
-	})
+	}
+
+	// 生产环境设置域名
+	if c.Request.Host == "api.ifoodme.com" {
+		cookie.Domain = ".ifoodme.com"
+	}
+
+	http.SetCookie(c.Writer, cookie)
 
 	// 重定向到前端首页
 	c.Redirect(http.StatusFound, "https://ifoodme.com/")
@@ -181,7 +187,7 @@ func (s *Server) MeHandler(c *gin.Context) {
 }
 
 func (s *Server) LogoutHandler(c *gin.Context) {
-	http.SetCookie(c.Writer, &http.Cookie{
+	cookie := &http.Cookie{
 		Name:     "token",
 		Value:    "",
 		Path:     "/",
@@ -190,7 +196,14 @@ func (s *Server) LogoutHandler(c *gin.Context) {
 		HttpOnly: true,
 		Secure:   true, // 生产环境要 true
 		SameSite: http.SameSiteNoneMode,
-	})
+	}
+
+	// 生产环境设置域名
+	if c.Request.Host == "api.ifoodme.com" {
+		cookie.Domain = ".ifoodme.com"
+	}
+
+	http.SetCookie(c.Writer, cookie)
 	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
 }
 

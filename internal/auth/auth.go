@@ -16,7 +16,6 @@ import (
 const (
 	key    = "randomString"
 	MaxAge = 86400 * 30
-	IsProd = true
 )
 
 func NewAuth() {
@@ -34,16 +33,23 @@ func NewAuth() {
 		callbackURL = "https://api.ifoodme.com/api/auth/google/callback"
 	}
 
+	// 从环境变量判断是否为生产环境
+	isProd := os.Getenv("ENVIRONMENT") == "production"
+
 	fmt.Printf("googleClientId: %s\n", googleClientId)
 	fmt.Printf("callbackURL: %s\n", callbackURL)
+	fmt.Printf("isProd: %v\n", isProd)
 
 	store := sessions.NewCookieStore([]byte(key))
 	store.MaxAge(MaxAge)
 
 	store.Options.Path = "/"
 	store.Options.HttpOnly = true
-	store.Options.Secure = IsProd
-	store.Options.SameSite = http.SameSiteLaxMode
+	store.Options.Secure = isProd
+	store.Options.SameSite = http.SameSiteNoneMode // 生产环境跨域需要 None
+	if isProd {
+		store.Options.Domain = ".ifoodme.com" // 允许子域名共享
+	}
 
 	gothic.Store = store
 
