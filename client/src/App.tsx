@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchMe, logout } from "./api";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
@@ -20,12 +20,12 @@ function App() {
   useEffect(() => {
     // 检查URL参数中是否有token
     const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    
+    const token = urlParams.get("token");
+
     if (token) {
       // 存储token到localStorage
-      localStorage.setItem('access_token', token);
-      
+      localStorage.setItem("access_token", token);
+
       // 清除URL中的token参数
       window.history.replaceState({}, document.title, window.location.pathname);
     }
@@ -81,7 +81,7 @@ function App() {
       <button
         onClick={async () => {
           await logout();
-          localStorage.removeItem('access_token'); // 清除本地token
+          localStorage.removeItem("access_token"); // 清除本地token
           setUser(null); // 清空本地用户状态
         }}
       >
