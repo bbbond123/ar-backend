@@ -142,8 +142,6 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 		// 2. 根据环境判断默认地址
 		if os.Getenv("ENVIRONMENT") == "production" {
 			frontendURL = "https://www.ifoodme.com/"
-		} else {
-			frontendURL = "http://localhost:5173/"
 		}
 	}
 
