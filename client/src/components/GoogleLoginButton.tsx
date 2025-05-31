@@ -6,11 +6,11 @@ const GoogleLoginButton: React.FC = () => {
     const currentURL = window.location.origin;
     const redirectParam = encodeURIComponent(currentURL);
     
-    // 根据环境判断后端地址
-    // const apiBaseUrl = import.meta.env.VITE_API_URL || "https://www.ifoodme.com/";
+    // 统一使用www.ifoodme.com，后端已通过nginx转发
+    const apiBaseUrl = 'https://www.ifoodme.com';
     
-    // 直接跳转到后端的 Google 登录接口
-    window.location.href = `https://www.ifoodme.com/api/auth/google?redirect=${redirectParam}`;
+    // 跳转到Google登录接口
+    window.location.href = `${apiBaseUrl}/api/auth/google?redirect=${redirectParam}`;
   };
 
   return (

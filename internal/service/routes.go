@@ -34,7 +34,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 		AllowOrigins: []string{
 			"https://ifoodme.com",
 			"https://www.ifoodme.com",
-			"https://api.ifoodme.com",
+			// "https://api.ifoodme.com",
 		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Accept", "Authorization", "Content-Type"},

@@ -30,7 +30,7 @@ func NewAuth() {
 	// 从环境变量获取回调 URL，如果没有则使用默认值
 	callbackURL := os.Getenv("GOOGLE_CALLBACK_URL")
 	if callbackURL == "" {
-		callbackURL = "https://api.ifoodme.com/api/auth/google/callback"
+		callbackURL = "https://www.ifoodme.com/api/auth/google/callback"
 	}
 
 	// 从环境变量判断是否为生产环境
