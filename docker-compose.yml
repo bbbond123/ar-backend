@@ -1,56 +1,102 @@
 services:
-  # Go应用服务
-  ar-backend:
-    build: .
-    container_name: ar-backend-app
+  # Nginx 反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: ifoodme-nginx
     ports:
-      - "3000:3000"
-    env_file:
-      - .env
-    environment:
-      # 重写数据库host为docker服务名
-      - BLUEPRINT_DB_HOST=postgres
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro  # 使用系统的 Let's Encrypt 证书
+      - ./nginx/logs:/var/log/nginx
+      - ./client/dist:/var/www/html:ro  # 前端静态文件
     depends_on:
-      - postgres
+      - ar-backend
     networks:
       - app-network
     restart: unless-stopped
 
-  postgres:
-    image: postgres:latest
-    container_name: ar-backend-postgres
+  # Go 后端服务
+  ar-backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: ifoodme-backend
+    environment:
+      # 重写数据库 host 为 docker 服务名
+      - BLUEPRINT_DB_HOST=postgres
+      - ENVIRONMENT=production
+      - FRONTEND_URL=https://www.ifoodme.com
+      - GOOGLE_CALLBACK_URL=https://www.ifoodme.com/api/auth/google/callback
+      - COOKIE_DOMAIN=.ifoodme.com
     env_file:
-      - .env
+      - .env.docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: ifoodme-postgres
     environment:
       - POSTGRES_DB=${BLUEPRINT_DB_DATABASE}
       - POSTGRES_USER=${BLUEPRINT_DB_USERNAME}
       - POSTGRES_PASSWORD=${BLUEPRINT_DB_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql_script:/docker-entrypoint-initdb.d:ro
     networks:
       - app-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${BLUEPRINT_DB_USERNAME} -d ${BLUEPRINT_DB_DATABASE}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
+  # PgAdmin 管理工具（可选）
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: ar-backend-pgadmin
+    container_name: ifoodme-pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL: admin@ifoodme.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
       PGADMIN_CONFIG_SERVER_MODE: "False"
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
     volumes:
-      - ./pgadmin-data:/var/lib/pgadmin
+      - pgadmin_data:/var/lib/pgadmin
     ports:
-      - "9080:80"
+      - "127.0.0.1:9080:80"  # 只绑定到本地地址
     depends_on:
       - postgres
     networks:
       - app-network
     restart: unless-stopped
+    profiles:
+      - admin  # 使用 profile，默认不启动
 
 networks:
   app-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local

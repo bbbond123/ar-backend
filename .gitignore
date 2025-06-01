@@ -42,6 +42,7 @@ Thumbs.db
 .env
 .env.local
 .env.production
+.env.docker
 
 # Database files
 pgdata/
@@ -50,8 +51,11 @@ pgadmin-data/
 *.sqlite
 *.sqlite3
 
-# Docker volumes
+# Docker volumes and data
 data/
+certbot/
+nginx/logs/
+backups/
 
 # Build artifacts
 ar-backend
