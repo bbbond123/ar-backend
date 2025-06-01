@@ -1,12 +1,15 @@
 package controller
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"ar-backend/internal/model"
@@ -16,6 +19,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
+	"github.com/markbates/goth/gothic"
+	"gorm.io/gorm"
 )
 
 // getJWTSecret 从环境变量获取 JWT 密钥
@@ -453,4 +458,152 @@ func GoogleAuth(c *gin.Context) {
 			RefreshToken: refreshToken,
 		},
 	})
+}
+
+// BeginGoogleAuth godoc
+// @Summary 开始 Google OAuth 认证
+// @Description 重定向到 Google 登录页面
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Success 302 {string} string "重定向到 Google 登录页面"
+// @Router /api/auth/google [get]
+func BeginGoogleAuth(c *gin.Context) {
+	provider := "google"
+	ctx := context.WithValue(context.Background(), "provider", provider)
+	r := c.Request.WithContext(ctx)
+	w := c.Writer
+
+	// 获取前端传递的 redirect 参数
+	redirectURL := c.Query("redirect")
+	if redirectURL != "" {
+		// 将 redirect URL 保存到 session 中，以便在回调时使用
+		session, err := gothic.Store.Get(r, "oauth_session")
+		if err == nil {
+			session.Values["redirect_url"] = redirectURL
+			session.Save(r, w)
+		}
+	}
+
+	gothic.BeginAuthHandler(w, r)
+}
+
+// GoogleAuthCallback godoc
+// @Summary Google OAuth 回调处理
+// @Description 处理 Google 登录回调，创建或更新用户，并返回 JWT token
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Success 302 {string} string "重定向到前端页面，并携带 token"
+// @Router /api/auth/google/callback [get]
+func GoogleAuthCallback(c *gin.Context) {
+	provider := "google"
+	ctx := context.WithValue(context.Background(), "provider", provider)
+	r := c.Request.WithContext(ctx)
+	w := c.Writer
+
+	user, err := gothic.CompleteUserAuth(w, r)
+	if err != nil {
+		c.String(http.StatusUnauthorized, "auth error: %v", err)
+		return
+	}
+
+	db := database.GetDB()
+	var userInDB model.User
+	err = db.Where("email = ?", user.Email).First(&userInDB).Error
+	if err == gorm.ErrRecordNotFound {
+		userInDB = model.User{
+			Email:    user.Email,
+			GoogleID: user.UserID,
+			Name:     user.Name,
+			Avatar:   user.AvatarURL,
+			Provider: "google",
+			Status:   "active",
+		}
+		err = db.Create(&userInDB).Error
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Could not create user")
+			return
+		}
+	} else if err == nil {
+		err = db.Model(&userInDB).Updates(map[string]interface{}{
+			"google_id":  user.UserID,
+			"avatar":     user.AvatarURL,
+			"updated_at": time.Now(),
+		}).Error
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Could not update user")
+			return
+		}
+	} else {
+		c.String(http.StatusInternalServerError, "Database error")
+		return
+	}
+
+	// 生成 JWT
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": userInDB.UserID,
+		"email":   userInDB.Email,
+		"name":    userInDB.Name,
+		"avatar":  userInDB.Avatar,
+		"exp":     time.Now().Add(24 * time.Hour).Unix(),
+	})
+	tokenString, err := token.SignedString(getJWTSecret())
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Could not create token")
+		return
+	}
+
+	// 设置 Cookie
+	cookie := &http.Cookie{
+		Name:     "token",
+		Value:    tokenString,
+		Path:     "/",
+		HttpOnly: false,                 // 改为 false，让前端JS能访问
+		Secure:   true,                  // 生产环境用 true（HTTPS）
+		SameSite: http.SameSiteNoneMode, // 跨域需要 None
+	}
+
+	// 从环境变量获取域名配置
+	if os.Getenv("ENVIRONMENT") == "production" {
+		cookieDomain := os.Getenv("COOKIE_DOMAIN")
+		if cookieDomain == "" {
+			cookieDomain = ".ifoodme.com" // 保持向后兼容
+		}
+		cookie.Domain = cookieDomain
+	}
+
+	http.SetCookie(c.Writer, cookie)
+
+	// 获取重定向地址
+	var frontendURL string
+
+	// 1. 优先从 session 中获取前端传递的 redirect 参数
+	session, err := gothic.Store.Get(r, "oauth_session")
+	if err == nil {
+		if savedRedirectURL, ok := session.Values["redirect_url"].(string); ok && savedRedirectURL != "" {
+			frontendURL = savedRedirectURL
+		}
+	}
+
+	// 2. 如果没有 redirect 参数，使用环境变量
+	if frontendURL == "" {
+		frontendURL = os.Getenv("FRONTEND_URL")
+	}
+
+	// 3. 如果环境变量也没有，使用默认地址
+	if frontendURL == "" {
+		frontendURL = "https://www.ifoodme.com"
+	}
+
+	// 确保URL以斜杠结尾
+	if !strings.HasSuffix(frontendURL, "/") {
+		frontendURL += "/"
+	}
+
+	// 同时将token作为URL参数传递，让前端可以获取并存储
+	frontendURL += "?token=" + url.QueryEscape(tokenString)
+
+	// 重定向到前端首页
+	c.Redirect(http.StatusFound, frontendURL)
 }

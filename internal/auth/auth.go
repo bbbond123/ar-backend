@@ -47,7 +47,7 @@ func NewAuth() {
 		if os.Getenv("ENVIRONMENT") == "production" {
 			callbackURL = "https://www.ifoodme.com/api/auth/google/callback"
 		} else {
-			callbackURL = "http://localhost:3000/auth/google/callback"
+			callbackURL = "https://www.ifoodme.com/api/auth/google/callback"
 		}
 	}
 
@@ -90,7 +90,8 @@ func NewAuth() {
 
 	gothic.Store = store
 
-	goth.UseProviders(
-		google.New(googleClientId, googleClientSecret, callbackURL),
-	)
+	// 设置 Google OAuth 配置
+	googleProvider := google.New(googleClientId, googleClientSecret, callbackURL)
+	googleProvider.SetPrompt("select_account") // 强制显示 Google 账号选择界面
+	goth.UseProviders(googleProvider)
 }

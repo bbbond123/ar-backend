@@ -32,6 +32,8 @@ func InitRouter() *gin.Engine {
 		authPublic.POST("/refresh", controller.RefreshToken)
 		authPublic.POST("/logout", controller.RevokeRefreshToken)
 		authPublic.POST("/google", controller.GoogleAuth)
+		authPublic.GET("/google", controller.BeginGoogleAuth)
+		authPublic.GET("/google/callback", controller.GoogleAuthCallback)
 	}
 
 	// 需要认证的用户路由

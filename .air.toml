@@ -16,16 +16,16 @@ tmp_dir = "tmp"
   include_dir = []
   include_ext = ["go", "tpl", "tmpl", "html", "env"]
   include_file = []
-  kill_delay = "0s"
+  kill_delay = "0.5s"
   log = "build-errors.log"
   poll = false
   poll_interval = 0
   post_cmd = []
   pre_cmd = []
-  rerun = false
+  rerun = true
   rerun_delay = 500
-  send_interrupt = false
-  stop_on_error = false
+  send_interrupt = true
+  stop_on_error = true
 
 [color]
   app = ""
@@ -37,16 +37,16 @@ tmp_dir = "tmp"
 [log]
   main_only = false
   silent = false
-  time = false
+  time = true
 
 [misc]
-  clean_on_exit = false
+  clean_on_exit = true
 
 [proxy]
-  app_port = 0
-  enabled = false
-  proxy_port = 0
+  app_port = 3000
+  enabled = true
+  proxy_port = 3001
 
 [screen]
-  clear_on_rebuild = false
+  clear_on_rebuild = true
   keep_scroll = true
