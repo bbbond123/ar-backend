@@ -8,7 +8,9 @@ type File struct {
 	FileName  string    `gorm:"column:file_name;type:varchar(255);not null" json:"file_name"`
 	FileType  string    `gorm:"column:file_type;type:varchar(50);not null" json:"file_type"`
 	FileSize  int       `gorm:"column:file_size" json:"file_size"`
-	FileData  []byte    `gorm:"column:file_data;not null" json:"file_data"`
+	FileData  []byte    `gorm:"column:file_data" json:"file_data,omitempty"`
+	S3Key     string    `gorm:"column:s3_key;type:varchar(500)" json:"s3_key,omitempty"`
+	S3URL     string    `gorm:"column:s3_url;type:varchar(1000)" json:"s3_url,omitempty"`
 	Location  string    `gorm:"column:location;type:varchar(255);not null" json:"location"`
 	RelatedID int       `gorm:"column:related_id;not null" json:"related_id"`
 	CreatedAt time.Time `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP" json:"created_at"`
@@ -46,4 +48,10 @@ type FileReqList struct {
 // FileDetailRequest 获取单个文件请求
 type FileDetailRequest struct {
 	FileID int `json:"file_id" binding:"required"`
+}
+
+// FileUploadRequest 文件上传请求（multipart/form-data）
+type FileUploadRequest struct {
+	Location  string `form:"location" binding:"required"`
+	RelatedID int    `form:"related_id" binding:"required"`
 }
