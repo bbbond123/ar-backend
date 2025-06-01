@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -47,23 +46,26 @@ func NewAuth() {
 		if os.Getenv("ENVIRONMENT") == "production" {
 			callbackURL = "https://www.ifoodme.com/api/auth/google/callback"
 		} else {
-			callbackURL = "https://www.ifoodme.com/api/auth/google/callback"
+			callbackURL = "http://localhost:3000/api/auth/google/callback"
 		}
 	}
 
 	// 从环境变量判断是否为生产环境
 	isProd := os.Getenv("ENVIRONMENT") == "production"
 
-	fmt.Printf("googleClientId: %s\n", googleClientId)
-	fmt.Printf("callbackURL: %s\n", callbackURL)
-	fmt.Printf("isProd: %v\n", isProd)
-	fmt.Printf("Cookie Secure: %v\n", isProd)
-	fmt.Printf("Cookie SameSite: %v\n", func() string {
+	log.Printf("=== OAuth Configuration ===")
+	log.Printf("Environment: %s", os.Getenv("ENVIRONMENT"))
+	log.Printf("Google Client ID: %s", googleClientId)
+	log.Printf("Google Callback URL: %s", callbackURL)
+	log.Printf("Is Production: %v", isProd)
+	log.Printf("Cookie Secure: %v", isProd)
+	log.Printf("Cookie SameSite: %v", func() string {
 		if isProd {
 			return "None"
 		}
 		return "Lax"
 	}())
+	log.Printf("========================")
 
 	store := sessions.NewCookieStore([]byte(getSessionSecret()))
 	store.MaxAge(MaxAge)
@@ -75,17 +77,16 @@ func NewAuth() {
 	// 根据环境设置 SameSite
 	if isProd {
 		store.Options.SameSite = http.SameSiteNoneMode // 生产环境跨域需要 None
-	} else {
-		store.Options.SameSite = http.SameSiteLaxMode // 本地开发用 Lax
-	}
-
-	// 从环境变量获取域名配置
-	if isProd {
+		// 生产环境设置域名
 		cookieDomain := os.Getenv("COOKIE_DOMAIN")
 		if cookieDomain == "" {
 			cookieDomain = ".ifoodme.com" // 保持向后兼容
 		}
 		store.Options.Domain = cookieDomain
+		log.Printf("Production Cookie Domain: %s", cookieDomain)
+	} else {
+		store.Options.SameSite = http.SameSiteLaxMode // 本地开发用 Lax
+		log.Printf("Development mode - no domain restriction")
 	}
 
 	gothic.Store = store
