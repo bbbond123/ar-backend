@@ -14,9 +14,11 @@ func (UserRouter) Register(r *gin.RouterGroup) {
 	{
 		user.POST("", controller.CreateUser)
 		user.PUT("", controller.UpdateUser)
-		user.DELETE(":user_id", controller.DeleteUser)
-		user.GET(":user_id", controller.GetUser)
+		user.DELETE("/:user_id", controller.DeleteUser)
+		user.GET("/:user_id", controller.GetUser)
 		user.POST("/list", controller.ListUsers)
+		user.GET("/statistics", controller.GetUserStatistics)
+		user.POST("/init-sample", controller.InitializeSampleUsers)
 	}
 }
 

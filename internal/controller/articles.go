@@ -39,7 +39,7 @@ func CreateArticle(c *gin.Context) {
 	}
 	claims := &UserIDClaims{}
 	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(secretKey), nil
+		return getJWTSecret(), nil
 	})
 	if err != nil || !token.Valid {
 		c.JSON(401, model.BaseResponse{Success: false, ErrMessage: "token无效或已过期"})

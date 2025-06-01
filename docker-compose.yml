@@ -1,20 +1,41 @@
-version: "3.8"
 services:
+  # Go应用服务
+  ar-backend:
+    build: .
+    container_name: ar-backend-app
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      # 重写数据库host为docker服务名
+      - BLUEPRINT_DB_HOST=postgres
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+    restart: unless-stopped
+
   postgres:
     image: postgres:latest
+    container_name: ar-backend-postgres
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: mydatabase
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
+      - POSTGRES_DB=${BLUEPRINT_DB_DATABASE}
+      - POSTGRES_USER=${BLUEPRINT_DB_USERNAME}
+      - POSTGRES_PASSWORD=${BLUEPRINT_DB_PASSWORD}
     volumes:
       - ./pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
       - app-network
+    restart: unless-stopped
 
   pgadmin:
     image: dpage/pgadmin4:latest
+    container_name: ar-backend-pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
@@ -28,6 +49,7 @@ services:
       - postgres
     networks:
       - app-network
+    restart: unless-stopped
 
 networks:
   app-network:

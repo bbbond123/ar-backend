@@ -24,22 +24,26 @@ func InitRouter() *gin.Engine {
 	r := gin.Default()
 	api := r.Group("/api")
 
-	api.POST("/login", controller.Login)
-	api.POST("/register", controller.Register)
-	api.POST("/refresh", controller.RefreshToken)
-	api.POST("/logout", controller.RevokeRefreshToken)
+	// 公开的认证路由 (不需要JWT验证)
+	authPublic := api.Group("/auth")
+	{
+		authPublic.POST("/login", controller.Login)
+		authPublic.POST("/register", controller.Register)
+		authPublic.POST("/refresh", controller.RefreshToken)
+		authPublic.POST("/logout", controller.RevokeRefreshToken)
+		authPublic.POST("/google", controller.GoogleAuth)
+	}
+
+	// 需要认证的用户路由
+	authProtected := api.Group("/auth")
+	authProtected.Use(middleware.JWTAuth())
+	{
+		authProtected.GET("/user/profile", controller.UserProfile)
+	}
 
 	// 注册所有模块路由
 	for _, rr := range routeRegisters {
 		rr.Register(api)
-	}
-
-	// 注册auth路由
-	auth := api.Group("/auth")
-	auth.Use(middleware.JWTAuth())
-	{
-		auth.GET("/user/profile", controller.UserProfile)
-		// 其他需要登录的接口
 	}
 
 	return r

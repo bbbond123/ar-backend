@@ -2,14 +2,23 @@ package middleware
 
 import (
 	"ar-backend/internal/model"
+	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 )
 
-const secretKey = "my_secret_key" // 保持和主项目一致
+// getJWTSecret 从环境变量获取 JWT 密钥
+func getJWTSecret() []byte {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		log.Fatal("JWT_SECRET environment variable is required")
+	}
+	return []byte(secret)
+}
 
 type UserIDClaims struct {
 	UserID int `json:"user_id"`
@@ -27,7 +36,7 @@ func JWTAuth() gin.HandlerFunc {
 		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 		claims := &UserIDClaims{}
 		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
-			return []byte(secretKey), nil
+			return getJWTSecret(), nil
 		})
 		if err != nil || !token.Valid {
 			c.JSON(http.StatusUnauthorized, model.BaseResponse{Success: false, ErrMessage: "token无效或已过期"})

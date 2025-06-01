@@ -18,7 +18,11 @@ type Server struct {
 }
 
 func NewServer(gormDB *gorm.DB) *http.Server {
-	port, _ := strconv.Atoi(os.Getenv("SERVER_PORT"))
+	port, err := strconv.Atoi(os.Getenv("SERVER_PORT"))
+	if err != nil || port == 0 {
+		port = 3000 // 默认端口3000
+	}
+
 	NewServer := &Server{
 		port:   port,
 		gormDB: gormDB,

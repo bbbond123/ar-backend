@@ -1,0 +1,112 @@
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres", "postgresql://$BLUEPRINT_DB_USERNAME:$BLUEPRINT_DB_PASSWORD@$BLUEPRINT_DB_HOST:5432/$BLUEPRINT_DB_DATABASE"],
+      "env": {}
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/Users/jamesw/dev_workspace/travel_AR_project_RXD/code/ar-backend"],
+      "env": {}
+    }
+  },
+  "rules": {
+    "database": {
+      "allowedTables": [
+        "users",
+        "articles", 
+        "comments",
+        "facilities",
+        "files",
+        "languages",
+        "menus",
+        "notices", 
+        "refresh_tokens",
+        "stores",
+        "taggings",
+        "tags",
+        "visit_histories"
+      ],
+      "allowedOperations": ["SELECT", "INSERT", "UPDATE", "DELETE"],
+      "restrictions": {
+        "no_truncate": true,
+        "no_drop": true,
+        "backup_before_bulk_operations": true
+      }
+    },
+    "filesystem": {
+      "allowedPaths": [
+        "/Users/jamesw/dev_workspace/travel_AR_project_RXD/code/ar-backend",
+        "/Users/jamesw/dev_workspace/travel_AR_project_RXD/code/ar-backend/internal",
+        "/Users/jamesw/dev_workspace/travel_AR_project_RXD/code/ar-backend/pkg",
+        "/Users/jamesw/dev_workspace/travel_AR_project_RXD/code/ar-backend/docs",
+        "/Users/jamesw/dev_workspace/travel_AR_project_RXD/code/ar-backend/config"
+      ],
+      "allowedExtensions": [".go", ".json", ".yaml", ".yml", ".md", ".txt", ".sql", ".sh"],
+      "excludedPaths": [
+        "node_modules",
+        ".git",
+        "tmp",
+        "pgdata",
+        "pgadmin-data",
+        "*.log",
+        "ar-backend"
+      ]
+    }
+  },
+  "project": {
+    "name": "AR Backend",
+    "description": "Travel AR Project Backend API",
+    "version": "1.0.0",
+    "tech_stack": ["Go", "Gin", "GORM", "PostgreSQL", "Docker"],
+    "endpoints": {
+      "api_base": "http://localhost:3000/api",
+      "swagger": "http://localhost:3000/swagger/index.html",
+      "health": "http://localhost:3000/api/health"
+    },
+    "database": {
+      "type": "postgresql",
+      "host": "localhost",
+      "port": 5432,
+      "database": "mydatabase",
+      "schema": "public"
+    },
+    "features": [
+      "User Registration & Authentication",
+      "JWT Token Management", 
+      "Google OAuth Integration",
+      "CRUD Operations for all entities",
+      "API Documentation with Swagger",
+      "Hot Reload Development with Air",
+      "Docker Containerization"
+    ]
+  },
+  "development": {
+    "commands": {
+      "start_dev": "air",
+      "build": "go build -o ar-backend .",
+      "deploy": "./deploy.sh",
+      "start_db": "docker-compose up postgres -d",
+      "stop_db": "docker-compose down",
+      "logs": "tail -f app.log",
+      "test": "go test ./..."
+    },
+    "environment_variables": {
+      "required": [
+        "SERVER_PORT",
+        "BLUEPRINT_DB_HOST", 
+        "BLUEPRINT_DB_USERNAME",
+        "BLUEPRINT_DB_PASSWORD",
+        "BLUEPRINT_DB_DATABASE"
+      ],
+      "optional": [
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "GOOGLE_CALLBACK_URL",
+        "FRONTEND_URL",
+        "ENVIRONMENT"
+      ]
+    }
+  }
+} 

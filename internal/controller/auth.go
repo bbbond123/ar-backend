@@ -3,8 +3,10 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"time"
 
 	"ar-backend/internal/model"
@@ -16,8 +18,28 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const secretKey = "my_secret_key"
-const refreshSecretKey = "my_refresh_secret_key"
+// getJWTSecret 从环境变量获取 JWT 密钥
+func getJWTSecret() []byte {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		log.Fatal("JWT_SECRET environment variable is required")
+	}
+	return []byte(secret)
+}
+
+// getRefreshSecret 从环境变量获取 Refresh Token 密钥
+func getRefreshSecret() []byte {
+	secret := os.Getenv("JWT_REFRESH_SECRET")
+	if secret == "" {
+		// 如果没有设置专门的refresh secret，使用JWT_SECRET + 后缀
+		jwtSecret := os.Getenv("JWT_SECRET")
+		if jwtSecret == "" {
+			log.Fatal("JWT_SECRET environment variable is required")
+		}
+		return []byte(jwtSecret + "_refresh")
+	}
+	return []byte(secret)
+}
 
 type Claims struct {
 	Username string `json:"username"`
@@ -209,7 +231,7 @@ func generateAccessToken(userID int) (string, error) {
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(secretKey))
+	return token.SignedString(getJWTSecret())
 }
 
 // 生成长时refresh token（7天）
@@ -226,7 +248,7 @@ func generateRefreshTokenJWT(userID int) (string, error) {
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(refreshSecretKey))
+	return token.SignedString(getRefreshSecret())
 }
 
 // RefreshToken godoc
@@ -255,7 +277,7 @@ func RefreshToken(c *gin.Context) {
 	}
 	claims := &RefreshClaims{}
 	token, err := jwt.ParseWithClaims(refreshTokenStr, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(refreshSecretKey), nil
+		return getRefreshSecret(), nil
 	})
 	if err != nil || !token.Valid {
 		c.JSON(401, model.BaseResponse{Success: false, ErrMessage: "refresh token无效"})

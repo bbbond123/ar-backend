@@ -14,23 +14,41 @@ import (
 )
 
 const (
-	key    = "randomString"
 	MaxAge = 86400 * 30
 )
+
+// getSessionSecret 从环境变量获取 Session 密钥
+func getSessionSecret() string {
+	secret := os.Getenv("SESSION_SECRET")
+	if secret == "" {
+		// 如果没有设置专门的session secret，使用JWT_SECRET
+		jwtSecret := os.Getenv("JWT_SECRET")
+		if jwtSecret == "" {
+			log.Fatal("SESSION_SECRET or JWT_SECRET environment variable is required")
+		}
+		return jwtSecret + "_session"
+	}
+	return secret
+}
 
 func NewAuth() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("Error loading .env file, using environment variables")
 	}
 
 	googleClientId := os.Getenv("GOOGLE_CLIENT_ID")
 	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
 
-	// 从环境变量获取回调 URL，如果没有则使用默认值
+	// 从环境变量获取回调 URL
 	callbackURL := os.Getenv("GOOGLE_CALLBACK_URL")
 	if callbackURL == "" {
-		callbackURL = "https://www.ifoodme.com/api/auth/google/callback"
+		// 根据环境设置默认回调URL
+		if os.Getenv("ENVIRONMENT") == "production" {
+			callbackURL = "https://www.ifoodme.com/api/auth/google/callback"
+		} else {
+			callbackURL = "http://localhost:3000/auth/google/callback"
+		}
 	}
 
 	// 从环境变量判断是否为生产环境
@@ -47,7 +65,7 @@ func NewAuth() {
 		return "Lax"
 	}())
 
-	store := sessions.NewCookieStore([]byte(key))
+	store := sessions.NewCookieStore([]byte(getSessionSecret()))
 	store.MaxAge(MaxAge)
 
 	store.Options.Path = "/"
@@ -61,9 +79,13 @@ func NewAuth() {
 		store.Options.SameSite = http.SameSiteLaxMode // 本地开发用 Lax
 	}
 
-	// 生产环境下设置域名，允许子域名共享会话
+	// 从环境变量获取域名配置
 	if isProd {
-		store.Options.Domain = ".ifoodme.com" // 允许子域名共享
+		cookieDomain := os.Getenv("COOKIE_DOMAIN")
+		if cookieDomain == "" {
+			cookieDomain = ".ifoodme.com" // 保持向后兼容
+		}
+		store.Options.Domain = cookieDomain
 	}
 
 	gothic.Store = store

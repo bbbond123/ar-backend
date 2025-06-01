@@ -40,5 +40,23 @@ Thumbs.db
 
 # Environment files (if they contain sensitive data)
 .env
+.env.local
+.env.production
 
+# Database files
+pgdata/
+pgadmin-data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker volumes
+data/
+
+# Build artifacts
 ar-backend
+/dist/
+
+# Config files with sensitive data
+config.local.yaml
+config.production.yaml

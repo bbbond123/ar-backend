@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -22,20 +23,67 @@ import (
 	"gorm.io/gorm"
 )
 
-// 假设你有一个 JWT secret
-var jwtSecret = []byte("my_secret_key")
+// getJWTSecret 从环境变量获取 JWT 密钥
+func getJWTSecret() []byte {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		log.Fatal("JWT_SECRET environment variable is required")
+	}
+	return []byte(secret)
+}
+
+// getAllowedOrigins 从环境变量获取允许的 CORS 域名
+func getAllowedOrigins() []string {
+	// 从环境变量获取允许的域名，用逗号分隔
+	originsEnv := os.Getenv("ALLOWED_ORIGINS")
+	if originsEnv != "" {
+		return strings.Split(originsEnv, ",")
+	}
+
+	// 如果没有设置环境变量，使用默认值
+	if os.Getenv("ENVIRONMENT") == "production" {
+		return []string{
+			os.Getenv("FRONTEND_URL"),
+			"https://ifoodme.com",
+			"https://www.ifoodme.com",
+		}
+	}
+
+	// 开发环境默认值
+	return []string{
+		"http://localhost:3001",
+		"http://localhost:3000",
+		os.Getenv("FRONTEND_URL"),
+	}
+}
+
+// getDomainFromEnv 从环境变量获取域名
+func getDomainFromEnv() string {
+	domain := os.Getenv("COOKIE_DOMAIN")
+	if domain == "" && os.Getenv("ENVIRONMENT") == "production" {
+		domain = ".ifoodme.com"
+	}
+	return domain
+}
+
+// getDefaultFrontendURL 获取默认前端 URL
+func getDefaultFrontendURL() string {
+	if os.Getenv("ENVIRONMENT") == "production" {
+		return "https://www.ifoodme.com/"
+	}
+	return "http://localhost:3001/"
+}
 
 func (s *Server) RegisterRoutes() http.Handler {
 	// r := gin.Default()
 	r := router.InitRouter()
 
+	// 动态获取允许的域名
+	allowedOrigins := getAllowedOrigins()
+
 	// CORS 配置
 	corsConfig := cors.Config{
-		AllowOrigins: []string{
-			"https://ifoodme.com",
-			"https://www.ifoodme.com",
-			// "https://api.ifoodme.com",
-		},
+		AllowOrigins:     allowedOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Accept", "Authorization", "Content-Type"},
 		AllowCredentials: true,
@@ -121,7 +169,7 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 		"avatar":  userInDB.Avatar,
 		"exp":     time.Now().Add(24 * time.Hour).Unix(),
 	})
-	tokenString, err := token.SignedString(jwtSecret)
+	tokenString, err := token.SignedString(getJWTSecret())
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Could not create token")
 		return
@@ -146,10 +194,8 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 	// 1. 优先从环境变量获取
 	frontendURL = os.Getenv("FRONTEND_URL")
 	if frontendURL == "" {
-		// 2. 根据环境判断默认地址
-		if os.Getenv("ENVIRONMENT") == "production" {
-			frontendURL = "https://www.ifoodme.com/"
-		}
+		// 2. 使用默认地址
+		frontendURL = getDefaultFrontendURL()
 	}
 
 	// 确保URL以斜杠结尾
@@ -200,8 +246,8 @@ func (s *Server) MeHandler(c *gin.Context) {
 	}
 
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		fmt.Printf("JWT验证，使用secret: %s\n", string(jwtSecret))
-		return jwtSecret, nil
+		fmt.Printf("JWT验证，使用secret: %s\n", string(getJWTSecret()))
+		return getJWTSecret(), nil
 	})
 	if err != nil || !token.Valid {
 		fmt.Printf("JWT验证失败: err=%v, valid=%v\n", err, token.Valid)
@@ -252,9 +298,10 @@ func (s *Server) LogoutHandler(c *gin.Context) {
 		SameSite: http.SameSiteNoneMode,
 	}
 
-	// 生产环境设置域名
-	if c.Request.Host == "api.ifoodme.com" {
-		cookie.Domain = ".ifoodme.com"
+	// 从环境变量设置域名
+	domain := getDomainFromEnv()
+	if domain != "" {
+		cookie.Domain = domain
 	}
 
 	http.SetCookie(c.Writer, cookie)
