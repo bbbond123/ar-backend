@@ -188,14 +188,30 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 	// 不设置域名，让浏览器自动处理
 	http.SetCookie(c.Writer, cookie)
 
-	// 动态获取前端重定向地址
+	// 获取重定向地址
 	var frontendURL string
 
-	// 1. 优先从环境变量获取
-	frontendURL = os.Getenv("FRONTEND_URL")
+	// 1. 优先从 session 中获取前端传递的 redirect 参数
+	session, err := gothic.Store.Get(r, "oauth_session")
+	if err == nil {
+		if savedRedirectURL, ok := session.Values["redirect_url"].(string); ok && savedRedirectURL != "" {
+			frontendURL = savedRedirectURL
+			fmt.Printf("使用前端传递的redirect URL: %s\n", frontendURL)
+		}
+	}
+
+	// 2. 如果没有 redirect 参数，优先从环境变量获取
 	if frontendURL == "" {
-		// 2. 使用默认地址
+		frontendURL = os.Getenv("FRONTEND_URL")
+		if frontendURL != "" {
+			fmt.Printf("使用环境变量FRONTEND_URL: %s\n", frontendURL)
+		}
+	}
+
+	// 3. 如果环境变量也没有，使用默认地址
+	if frontendURL == "" {
 		frontendURL = getDefaultFrontendURL()
+		fmt.Printf("使用默认前端URL: %s\n", frontendURL)
 	}
 
 	// 确保URL以斜杠结尾
@@ -206,7 +222,7 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 	// 同时将token作为URL参数传递，让前端可以获取并存储
 	frontendURL += "?token=" + url.QueryEscape(tokenString)
 
-	fmt.Printf("重定向到: %s\n", frontendURL)
+	fmt.Printf("最终重定向到: %s\n", frontendURL)
 
 	// 重定向到前端首页
 	c.Redirect(http.StatusFound, frontendURL)
@@ -221,6 +237,26 @@ func (s *Server) beginAuthProviderCallback(c *gin.Context) {
 	fmt.Printf("Begin Auth - Provider: %s\n", provider)
 	fmt.Printf("Begin Auth - Request Host: %s\n", r.Host)
 	fmt.Printf("Begin Auth - Request Cookies: %v\n", r.Cookies())
+
+	// 获取前端传递的 redirect 参数
+	redirectURL := c.Query("redirect")
+	if redirectURL != "" {
+		fmt.Printf("前端传递的redirect参数: %s\n", redirectURL)
+
+		// 将 redirect URL 保存到 session 中，以便在回调时使用
+		session, err := gothic.Store.Get(r, "oauth_session")
+		if err != nil {
+			fmt.Printf("无法获取session: %v\n", err)
+		} else {
+			session.Values["redirect_url"] = redirectURL
+			err = session.Save(r, w)
+			if err != nil {
+				fmt.Printf("无法保存session: %v\n", err)
+			} else {
+				fmt.Printf("成功保存redirect_url到session: %s\n", redirectURL)
+			}
+		}
+	}
 
 	gothic.BeginAuthHandler(w, r)
 }

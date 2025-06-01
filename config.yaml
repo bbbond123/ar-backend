@@ -1,8 +1,0 @@
-# 配置文件
-# 注意：数据库配置已移至 .env 文件管理
-# 请在 .env 文件中配置以下变量：
-# - BLUEPRINT_DB_HOST
-# - BLUEPRINT_DB_USERNAME  
-# - BLUEPRINT_DB_PASSWORD
-# - BLUEPRINT_DB_DATABASE
-# - BLUEPRINT_DB_PORT
