@@ -21,7 +21,11 @@ interface ArticleListResponse {
   error_message?: string;
 }
 
-const ArticleList: React.FC = () => {
+interface ArticleListProps {
+  onArticleClick?: (articleId: number) => void;
+}
+
+const ArticleList: React.FC<ArticleListProps> = ({ onArticleClick }) => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -228,7 +232,11 @@ const ArticleList: React.FC = () => {
           <>
             <div className="articles-grid">
               {articles.map((article) => (
-                <div key={article.article_id} className="article-card">
+                <div 
+                  key={article.article_id} 
+                  className="article-card"
+                  onClick={() => onArticleClick?.(article.article_id)}
+                >
                   {article.image_url && (
                     <div className="article-image">
                       <img 

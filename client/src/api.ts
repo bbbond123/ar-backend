@@ -69,3 +69,20 @@ export async function getArticles(page: number = 1, pageSize: number = 10, keywo
 
   return response.json();
 }
+
+export async function getArticle(articleId: number) {
+  const response = await fetch(`/api/articles/${articleId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "credentials": "include"
+    },
+    credentials: "include"
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+}

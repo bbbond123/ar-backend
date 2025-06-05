@@ -5,6 +5,7 @@ import viteLogo from "/vite.svg";
 import GoogleLoginButton from "./components/GoogleLoginButton";
 import ArticleUpload from "./components/ArticleUpload";
 import ArticleList from "./components/ArticleList";
+import ArticleDetail from "./components/ArticleDetail";
 import "./App.css";
 
 type User = {
@@ -18,7 +19,8 @@ type User = {
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentView, setCurrentView] = useState<'profile' | 'upload' | 'articles'>('profile');
+  const [currentView, setCurrentView] = useState<'profile' | 'upload' | 'articles' | 'article-detail'>('profile');
+  const [selectedArticleId, setSelectedArticleId] = useState<number | null>(null);
 
   useEffect(() => {
     // 检查URL参数中是否有token
@@ -176,7 +178,24 @@ function App() {
         </div>
       )}
 
-      {currentView === 'articles' && <ArticleList />}
+      {currentView === 'articles' && (
+        <ArticleList 
+          onArticleClick={(articleId) => {
+            setSelectedArticleId(articleId);
+            setCurrentView('article-detail');
+          }}
+        />
+      )}
+
+      {currentView === 'article-detail' && selectedArticleId && (
+        <ArticleDetail 
+          articleId={selectedArticleId}
+          onBack={() => {
+            setCurrentView('articles');
+            setSelectedArticleId(null);
+          }}
+        />
+      )}
 
       {currentView === 'upload' && <ArticleUpload />}
     </div>
