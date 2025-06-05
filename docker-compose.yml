@@ -79,7 +79,7 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     ports:
-      - "127.0.0.1:9080:80"  # 只绑定到本地地址
+      - "9080:80"  # 只绑定到本地地址
     depends_on:
       - postgres
     networks:
