@@ -4,6 +4,7 @@ import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import GoogleLoginButton from "./components/GoogleLoginButton";
 import ArticleUpload from "./components/ArticleUpload";
+import ArticleList from "./components/ArticleList";
 import "./App.css";
 
 type User = {
@@ -17,7 +18,7 @@ type User = {
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentView, setCurrentView] = useState<'profile' | 'upload'>('profile');
+  const [currentView, setCurrentView] = useState<'profile' | 'upload' | 'articles'>('profile');
 
   useEffect(() => {
     // 检查URL参数中是否有token
@@ -93,6 +94,19 @@ function App() {
             个人资料
           </button>
           <button
+            onClick={() => setCurrentView('articles')}
+            style={{
+              padding: '0.5rem 1rem',
+              border: 'none',
+              background: currentView === 'articles' ? '#007bff' : 'transparent',
+              color: currentView === 'articles' ? 'white' : '#007bff',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            文章列表
+          </button>
+          <button
             onClick={() => setCurrentView('upload')}
             style={{
               padding: '0.5rem 1rem',
@@ -161,6 +175,8 @@ function App() {
           </div>
         </div>
       )}
+
+      {currentView === 'articles' && <ArticleList />}
 
       {currentView === 'upload' && <ArticleUpload />}
     </div>
