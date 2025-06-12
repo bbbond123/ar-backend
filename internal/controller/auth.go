@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -360,19 +361,107 @@ type GoogleUserInfo struct {
 }
 
 func getGoogleUserInfo(idToken string) (*GoogleUserInfo, error) {
-	resp, err := http.Get("https://oauth2.googleapis.com/tokeninfo?id_token=" + idToken)
+	fmt.Printf("=== Google Token验证开始 ===\n")
+	fmt.Printf("接收到的ID Token长度: %d\n", len(idToken))
+	fmt.Printf("ID Token前50字符: %s...\n", func() string {
+		if len(idToken) > 50 {
+			return idToken[:50]
+		}
+		return idToken
+	}())
+	
+	// 支持多平台的Client ID验证
+	validClientIDs := []string{
+		"680314480886-ugffmjjjdfdg1a98g5ami0sa9f10pbbn.apps.googleusercontent.com", // Android
+		"680314480886-o8el90n41jc8g14qvu526a6iuflucpiu.apps.googleusercontent.com", // iOS
+		"680314480886-87foecji3cgqu9vqt85eh7ua6r6bnn9s.apps.googleusercontent.com", // Web
+		os.Getenv("GOOGLE_CLIENT_ID"), // 环境变量中的Client ID
+	}
+	
+	fmt.Printf("允许的Client IDs: %v\n", validClientIDs)
+	
+	tokenInfoURL := "https://oauth2.googleapis.com/tokeninfo?id_token=" + idToken
+	fmt.Printf("请求Google Token验证URL: %s\n", tokenInfoURL[:100]+"...")
+	
+	resp, err := http.Get(tokenInfoURL)
 	if err != nil {
+		fmt.Printf("Google Token验证请求失败: %v\n", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
+	
+	fmt.Printf("Google API响应状态码: %d\n", resp.StatusCode)
+	
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("invalid google id_token")
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		fmt.Printf("Google API错误响应: %s\n", string(bodyBytes))
+		return nil, fmt.Errorf("invalid google id_token, status: %d", resp.StatusCode)
 	}
+	
 	var info GoogleUserInfo
 	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
+		fmt.Printf("解析Google用户信息失败: %v\n", err)
 		return nil, err
 	}
-	return &info, nil
+	
+	fmt.Printf("获取到的用户信息 - Email: %s, Name: %s, Sub: %s\n", info.Email, info.Name, info.Sub)
+	
+	// 验证token的audience (client_id)是否在我们的允许列表中
+	tokenResp, err := http.Get("https://oauth2.googleapis.com/tokeninfo?id_token=" + idToken)
+	if err != nil {
+		fmt.Printf("二次Token验证请求失败: %v\n", err)
+		return nil, err
+	}
+	defer tokenResp.Body.Close()
+	
+	var tokenInfo struct {
+		Aud           string `json:"aud"`           // client_id
+		Sub           string `json:"sub"`           // user_id
+		Email         string `json:"email"`
+		EmailVerified string `json:"email_verified"`
+		Name          string `json:"name"`
+		Picture       string `json:"picture"`
+		Iss           string `json:"iss"`           // issuer
+		Exp           string `json:"exp"`           // expiration
+	}
+	
+	if err := json.NewDecoder(tokenResp.Body).Decode(&tokenInfo); err != nil {
+		fmt.Printf("解析Token详细信息失败: %v\n", err)
+		return nil, err
+	}
+	
+	fmt.Printf("Token详细信息 - Aud(Client ID): %s, Iss: %s, Exp: %s\n", tokenInfo.Aud, tokenInfo.Iss, tokenInfo.Exp)
+	fmt.Printf("Email验证状态: %s\n", tokenInfo.EmailVerified)
+	
+	// 检查client_id是否在允许列表中
+	validClientID := false
+	for _, clientID := range validClientIDs {
+		if clientID != "" && tokenInfo.Aud == clientID {
+			validClientID = true
+			fmt.Printf("✅ Google token验证成功，匹配的client_id: %s\n", clientID)
+			break
+		}
+	}
+	
+	if !validClientID {
+		fmt.Printf("❌ 无效的client_id: %s，不在允许列表中\n", tokenInfo.Aud)
+		fmt.Printf("允许的Client IDs: %v\n", validClientIDs)
+		return nil, fmt.Errorf("invalid client_id: %s", tokenInfo.Aud)
+	}
+	
+	// 返回验证后的用户信息
+	result := &GoogleUserInfo{
+		Sub:           tokenInfo.Sub,
+		Email:         tokenInfo.Email,
+		EmailVerified: tokenInfo.EmailVerified,
+		Name:          tokenInfo.Name,
+		Picture:       tokenInfo.Picture,
+	}
+	
+	fmt.Printf("=== Google Token验证成功 ===\n")
+	fmt.Printf("返回用户信息: %+v\n", result)
+	
+	return result, nil
 }
 
 // GoogleAuth godoc
@@ -387,32 +476,47 @@ func getGoogleUserInfo(idToken string) (*GoogleUserInfo, error) {
 // @Failure 500 {object} model.BaseResponse
 // @Router /api/auth/google [post]
 func GoogleAuth(c *gin.Context) {
+	fmt.Printf("\n=== GoogleAuth POST 开始 ===\n")
+	fmt.Printf("请求IP: %s\n", c.ClientIP())
+	fmt.Printf("User-Agent: %s\n", c.GetHeader("User-Agent"))
+	fmt.Printf("X-App-Platform: %s\n", c.GetHeader("X-App-Platform"))
+	
 	var req model.GoogleAuthRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		fmt.Printf("❌ 参数绑定失败: %v\n", err)
 		c.JSON(400, model.BaseResponse{Success: false, ErrMessage: "参数错误: " + err.Error()})
 		return
 	}
+	
+	fmt.Printf("接收到ID Token长度: %d\n", len(req.IdToken))
 
 	// 验证id_token，获取Google用户信息
 	userInfo, err := getGoogleUserInfo(req.IdToken)
 	if err != nil {
+		fmt.Printf("❌ Google token验证失败: %v\n", err)
 		c.JSON(400, model.BaseResponse{Success: false, ErrMessage: "Google token无效"})
 		return
 	}
 	if userInfo.Email == "" || userInfo.Sub == "" {
+		fmt.Printf("❌ Google用户信息不完整 - Email: %s, Sub: %s\n", userInfo.Email, userInfo.Sub)
 		c.JSON(400, model.BaseResponse{Success: false, ErrMessage: "Google用户信息不完整"})
 		return
 	}
 
+	fmt.Printf("✅ Google用户信息验证成功 - Email: %s, Sub: %s\n", userInfo.Email, userInfo.Sub)
+
 	db := database.GetDB()
 	var user model.User
 	if err := db.Where("google_id = ?", userInfo.Sub).First(&user).Error; err == nil {
+		fmt.Printf("✅ 找到已存在用户 - UserID: %d, Email: %s\n", user.UserID, user.Email)
 		// 已存在，直接登录
 		if user.Status != "active" {
+			fmt.Printf("更新用户状态为active - UserID: %d\n", user.UserID)
 			user.Status = "active"
 			db.Save(&user)
 		}
 	} else {
+		fmt.Printf("🆕 创建新用户 - Email: %s, GoogleID: %s\n", userInfo.Email, userInfo.Sub)
 		// 不存在，注册
 		user = model.User{
 			Email:    userInfo.Email,
@@ -422,22 +526,32 @@ func GoogleAuth(c *gin.Context) {
 			Status:   "active",
 		}
 		if err := db.Create(&user).Error; err != nil {
+			fmt.Printf("❌ 用户注册失败: %v\n", err)
 			c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "用户注册失败: " + err.Error()})
 			return
 		}
+		fmt.Printf("✅ 新用户创建成功 - UserID: %d\n", user.UserID)
 	}
 
+	fmt.Printf("开始生成Token - UserID: %d\n", user.UserID)
+	
 	accessToken, err := generateAccessToken(user.UserID)
 	if err != nil {
+		fmt.Printf("❌ AccessToken生成失败: %v\n", err)
 		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "Token生成失败"})
 		return
 	}
+	
+	fmt.Printf("✅ AccessToken生成成功，长度: %d\n", len(accessToken))
 
 	refreshToken, err := generateRefreshTokenJWT(user.UserID)
 	if err != nil {
+		fmt.Printf("❌ RefreshToken生成失败: %v\n", err)
 		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "RefreshToken生成失败"})
 		return
 	}
+	
+	fmt.Printf("✅ RefreshToken生成成功，长度: %d\n", len(refreshToken))
 
 	expiresAt := time.Now().Add(7 * 24 * time.Hour)
 	if err := db.Create(&model.RefreshToken{
@@ -446,9 +560,15 @@ func GoogleAuth(c *gin.Context) {
 		ExpiresAt:    expiresAt,
 		Revoked:      false,
 	}).Error; err != nil {
+		fmt.Printf("❌ RefreshToken存储失败: %v\n", err)
 		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "RefreshToken存储失败"})
 		return
 	}
+	
+	fmt.Printf("✅ RefreshToken存储成功，过期时间: %v\n", expiresAt)
+
+	fmt.Printf("=== GoogleAuth POST 成功完成 ===\n")
+	fmt.Printf("用户: %s (ID: %d) 登录成功\n\n", user.Email, user.UserID)
 
 	c.JSON(200, model.Response[model.AuthResponse]{
 		Success: true,
@@ -466,24 +586,50 @@ func GoogleAuth(c *gin.Context) {
 // @Tags Auth
 // @Accept json
 // @Produce json
+// @Param redirect query string false "重定向URL，支持深度链接(如: travelview://google-auth-callback)"
 // @Success 302 {string} string "重定向到 Google 登录页面"
 // @Router /api/auth/google [get]
 func BeginGoogleAuth(c *gin.Context) {
+	fmt.Printf("\n=== BeginGoogleAuth GET 开始 ===\n")
+	fmt.Printf("请求IP: %s\n", c.ClientIP())
+	fmt.Printf("User-Agent: %s\n", c.GetHeader("User-Agent"))
+	fmt.Printf("Referer: %s\n", c.GetHeader("Referer"))
+	
 	provider := "google"
 	ctx := context.WithValue(context.Background(), "provider", provider)
 	r := c.Request.WithContext(ctx)
 	w := c.Writer
 
-	// 获取前端传递的 redirect 参数
+	// 获取前端传递的 redirect 参数，支持深度链接
+	// 支持两种参数名：redirect 和 redirect_uri
 	redirectURL := c.Query("redirect")
+	if redirectURL == "" {
+		redirectURL = c.Query("redirect_uri")
+	}
+	fmt.Printf("接收到的redirect参数: %s\n", redirectURL)
+	fmt.Printf("原始查询字符串: %s\n", c.Request.URL.RawQuery)
+	
 	if redirectURL != "" {
+		fmt.Printf("BeginGoogleAuth - 处理redirect参数: %s\n", redirectURL)
 		// 将 redirect URL 保存到 session 中，以便在回调时使用
 		session, err := gothic.Store.Get(r, "oauth_session")
 		if err == nil {
 			session.Values["redirect_url"] = redirectURL
-			session.Save(r, w)
+			err = session.Save(r, w)
+			if err != nil {
+				fmt.Printf("❌ BeginGoogleAuth - 保存session失败: %v\n", err)
+			} else {
+				fmt.Printf("✅ BeginGoogleAuth - 成功保存redirect URL到session: %s\n", redirectURL)
+			}
+		} else {
+			fmt.Printf("❌ BeginGoogleAuth - 获取session失败: %v\n", err)
 		}
+	} else {
+		fmt.Printf("无redirect参数，将使用默认前端URL\n")
 	}
+
+	fmt.Printf("准备重定向到Google OAuth页面...\n")
+	fmt.Printf("=== BeginGoogleAuth GET 结束 ===\n\n")
 
 	gothic.BeginAuthHandler(w, r)
 }
@@ -497,21 +643,33 @@ func BeginGoogleAuth(c *gin.Context) {
 // @Success 302 {string} string "重定向到前端页面，并携带 token"
 // @Router /api/auth/google/callback [get]
 func GoogleAuthCallback(c *gin.Context) {
+	fmt.Printf("\n=== GoogleAuthCallback 开始 ===\n")
+	fmt.Printf("请求IP: %s\n", c.ClientIP())
+	fmt.Printf("User-Agent: %s\n", c.GetHeader("User-Agent"))
+	fmt.Printf("查询参数: %s\n", c.Request.URL.RawQuery)
+	
 	provider := "google"
 	ctx := context.WithValue(context.Background(), "provider", provider)
 	r := c.Request.WithContext(ctx)
 	w := c.Writer
 
+	fmt.Printf("开始完成Google OAuth认证...\n")
 	user, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
+		fmt.Printf("❌ Google OAuth认证失败: %v\n", err)
 		c.String(http.StatusUnauthorized, "auth error: %v", err)
 		return
 	}
+	
+	fmt.Printf("✅ Google OAuth认证成功\n")
+	fmt.Printf("Google用户信息 - Email: %s, Name: %s, UserID: %s\n", user.Email, user.Name, user.UserID)
+	fmt.Printf("Avatar: %s, Provider: %s\n", user.AvatarURL, user.Provider)
 
 	db := database.GetDB()
 	var userInDB model.User
 	err = db.Where("email = ?", user.Email).First(&userInDB).Error
 	if err == gorm.ErrRecordNotFound {
+		fmt.Printf("🆕 创建新用户 - Email: %s\n", user.Email)
 		userInDB = model.User{
 			Email:    user.Email,
 			GoogleID: user.UserID,
@@ -522,24 +680,32 @@ func GoogleAuthCallback(c *gin.Context) {
 		}
 		err = db.Create(&userInDB).Error
 		if err != nil {
+			fmt.Printf("❌ 创建用户失败: %v\n", err)
 			c.String(http.StatusInternalServerError, "Could not create user")
 			return
 		}
+		fmt.Printf("✅ 新用户创建成功 - UserID: %d\n", userInDB.UserID)
 	} else if err == nil {
+		fmt.Printf("✅ 找到已存在用户 - UserID: %d\n", userInDB.UserID)
 		err = db.Model(&userInDB).Updates(map[string]interface{}{
 			"google_id":  user.UserID,
 			"avatar":     user.AvatarURL,
 			"updated_at": time.Now(),
 		}).Error
 		if err != nil {
+			fmt.Printf("❌ 更新用户信息失败: %v\n", err)
 			c.String(http.StatusInternalServerError, "Could not update user")
 			return
 		}
+		fmt.Printf("✅ 用户信息更新成功\n")
 	} else {
+		fmt.Printf("❌ 数据库查询错误: %v\n", err)
 		c.String(http.StatusInternalServerError, "Database error")
 		return
 	}
 
+	fmt.Printf("开始生成JWT Token - UserID: %d\n", userInDB.UserID)
+	
 	// 生成 JWT
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userInDB.UserID,
@@ -550,9 +716,12 @@ func GoogleAuthCallback(c *gin.Context) {
 	})
 	tokenString, err := token.SignedString(getJWTSecret())
 	if err != nil {
+		fmt.Printf("❌ JWT Token生成失败: %v\n", err)
 		c.String(http.StatusInternalServerError, "Could not create token")
 		return
 	}
+	
+	fmt.Printf("✅ JWT Token生成成功，长度: %d\n", len(tokenString))
 
 	// 设置 Cookie
 	cookie := &http.Cookie{
@@ -565,15 +734,21 @@ func GoogleAuthCallback(c *gin.Context) {
 	}
 
 	// 从环境变量获取域名配置
-	if os.Getenv("ENVIRONMENT") == "production" {
+	isProd := os.Getenv("ENVIRONMENT") == "production"
+	if isProd {
 		cookieDomain := os.Getenv("COOKIE_DOMAIN")
 		if cookieDomain == "" {
 			cookieDomain = ".ifoodme.com" // 保持向后兼容
 		}
 		cookie.Domain = cookieDomain
+		fmt.Printf("设置生产环境Cookie - Domain: %s, Secure: true\n", cookieDomain)
+	} else {
+		cookie.Secure = false
+		fmt.Printf("设置开发环境Cookie - Secure: false\n")
 	}
 
 	http.SetCookie(c.Writer, cookie)
+	fmt.Printf("✅ Cookie设置成功\n")
 
 	// 获取重定向地址
 	var frontendURL string
@@ -581,21 +756,54 @@ func GoogleAuthCallback(c *gin.Context) {
 	// 1. 优先从 session 中获取前端传递的 redirect 参数
 	session, err := gothic.Store.Get(r, "oauth_session")
 	if err == nil {
+		fmt.Printf("✅ 成功获取session\n")
+		fmt.Printf("Session所有值: %+v\n", session.Values)
 		if savedRedirectURL, ok := session.Values["redirect_url"].(string); ok && savedRedirectURL != "" {
 			frontendURL = savedRedirectURL
+			fmt.Printf("✅ 从session获取到redirect URL: %s\n", frontendURL)
+		} else {
+			fmt.Printf("❌ session中没有找到redirect_url或值为空\n")
+			fmt.Printf("redirect_url值类型: %T, 值: %v\n", session.Values["redirect_url"], session.Values["redirect_url"])
 		}
+	} else {
+		fmt.Printf("❌ 获取session失败: %v\n", err)
 	}
 
 	// 2. 如果没有 redirect 参数，使用环境变量
 	if frontendURL == "" {
 		frontendURL = os.Getenv("FRONTEND_URL")
+		fmt.Printf("使用环境变量FRONTEND_URL: %s\n", frontendURL)
 	}
 
 	// 3. 如果环境变量也没有，使用默认地址
 	if frontendURL == "" {
 		frontendURL = "https://www.ifoodme.com"
+		fmt.Printf("使用默认前端URL: %s\n", frontendURL)
 	}
 
+	// 检查是否是React Native应用的深度链接
+	if strings.HasPrefix(frontendURL, "travelview://") {
+		fmt.Printf("🔗 检测到React Native深度链接\n")
+		// React Native 深度链接，构造参数
+		deepLink := frontendURL + "?token=" + url.QueryEscape(tokenString) + 
+			"&user_id=" + fmt.Sprintf("%d", userInDB.UserID) +
+			"&email=" + url.QueryEscape(userInDB.Email) +
+			"&name=" + url.QueryEscape(userInDB.Name)
+		
+		if userInDB.Avatar != "" {
+			deepLink += "&avatar=" + url.QueryEscape(userInDB.Avatar)
+		}
+		
+		fmt.Printf("构造的深度链接: %s\n", deepLink)
+		fmt.Printf("=== 重定向到React Native App ===\n\n")
+		
+		// 重定向到深度链接
+		c.Redirect(http.StatusFound, deepLink)
+		return
+	}
+
+	// Web应用处理
+	fmt.Printf("🌐 处理Web应用重定向\n")
 	// 确保URL以斜杠结尾
 	if !strings.HasSuffix(frontendURL, "/") {
 		frontendURL += "/"
@@ -603,6 +811,10 @@ func GoogleAuthCallback(c *gin.Context) {
 
 	// 同时将token作为URL参数传递，让前端可以获取并存储
 	frontendURL += "?token=" + url.QueryEscape(tokenString)
+	
+	fmt.Printf("最终重定向URL: %s\n", frontendURL)
+	fmt.Printf("=== GoogleAuthCallback 成功完成 ===\n")
+	fmt.Printf("用户: %s (ID: %d) 通过OAuth登录成功\n\n", userInDB.Email, userInDB.UserID)
 
 	// 重定向到前端首页
 	c.Redirect(http.StatusFound, frontendURL)

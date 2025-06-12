@@ -114,6 +114,7 @@ func (s *Server) healthHandler(c *gin.Context) {
 }
 
 func (s *Server) getAuthCallbackFunction(c *gin.Context) {
+	fmt.Printf("\n=== getAuthCallbackFunction 开始 ===\n")
 	provider := c.Param("provider")
 	ctx := context.WithValue(context.Background(), "provider", provider)
 	r := c.Request.WithContext(ctx)
@@ -121,19 +122,28 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 
 	fmt.Printf("OAuth Callback - Provider: %s\n", provider)
 	fmt.Printf("OAuth Callback - Request Host: %s\n", r.Host)
+	fmt.Printf("OAuth Callback - Request URL: %s\n", r.URL.String())
 	fmt.Printf("OAuth Callback - Request Cookies: %v\n", r.Cookies())
 	fmt.Printf("OAuth Callback - State: %s\n", r.URL.Query().Get("state"))
 	fmt.Printf("OAuth Callback - Code: %s\n", r.URL.Query().Get("code"))
+	fmt.Printf("OAuth Callback - Error: %s\n", r.URL.Query().Get("error"))
 
+	fmt.Printf("开始完成Gothic OAuth认证...\n")
 	user, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
-		fmt.Printf("OAuth Callback Error: %v\n", err)
+		fmt.Printf("❌ OAuth Callback Error: %v\n", err)
 		c.String(http.StatusUnauthorized, "auth error: %v", err)
 		return
 	}
+	
+	fmt.Printf("✅ Gothic OAuth认证成功\n")
+	fmt.Printf("获取到的用户信息 - Email: %s, Name: %s, UserID: %s\n", user.Email, user.Name, user.UserID)
+	fmt.Printf("Avatar: %s, Provider: %s\n", user.AvatarURL, user.Provider)
+	
 	var userInDB model.User
 	err = s.gormDB.Where("email = ?", user.Email).First(&userInDB).Error
 	if err == gorm.ErrRecordNotFound {
+		fmt.Printf("🆕 用户不存在，创建新用户 - Email: %s\n", user.Email)
 		userInDB = model.User{
 			Email:    user.Email,
 			GoogleID: user.UserID,
@@ -144,23 +154,32 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 		}
 		err = s.gormDB.Create(&userInDB).Error
 		if err != nil {
+			fmt.Printf("❌ 创建用户失败: %v\n", err)
 			c.String(http.StatusInternalServerError, "Could not create user")
 			return
 		}
+		fmt.Printf("✅ 新用户创建成功 - UserID: %d\n", userInDB.UserID)
 	} else if err == nil {
+		fmt.Printf("✅ 找到已存在用户 - UserID: %d, Email: %s\n", userInDB.UserID, userInDB.Email)
 		err = s.gormDB.Model(&userInDB).Updates(map[string]interface{}{
 			"google_id":  user.UserID,
 			"avatar":     user.AvatarURL,
 			"updated_at": time.Now(),
 		}).Error
 		if err != nil {
+			fmt.Printf("❌ 更新用户信息失败: %v\n", err)
 			c.String(http.StatusInternalServerError, "Could not update user")
 			return
 		}
+		fmt.Printf("✅ 用户信息更新成功\n")
 	} else {
+		fmt.Printf("❌ 数据库查询错误: %v\n", err)
 		c.String(http.StatusInternalServerError, "Database error")
 		return
 	}
+	
+	fmt.Printf("开始生成JWT Token - UserID: %d\n", userInDB.UserID)
+	
 	// 生成 JWT
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userInDB.UserID,
@@ -171,9 +190,12 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 	})
 	tokenString, err := token.SignedString(getJWTSecret())
 	if err != nil {
+		fmt.Printf("❌ JWT Token生成失败: %v\n", err)
 		c.String(http.StatusInternalServerError, "Could not create token")
 		return
 	}
+	
+	fmt.Printf("✅ JWT Token生成成功，长度: %d\n", len(tokenString))
 
 	// 设置 Cookie
 	cookie := &http.Cookie{
@@ -185,8 +207,22 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 		SameSite: http.SameSiteNoneMode, // 跨域需要 None
 	}
 
+	// 检查环境并设置Cookie安全选项
+	isProd := os.Getenv("ENVIRONMENT") == "production"
+	if isProd {
+		cookieDomain := os.Getenv("COOKIE_DOMAIN")
+		if cookieDomain != "" {
+			cookie.Domain = cookieDomain
+		}
+		fmt.Printf("设置生产环境Cookie - Domain: %s, Secure: true\n", cookie.Domain)
+	} else {
+		cookie.Secure = false
+		fmt.Printf("设置开发环境Cookie - Secure: false\n")
+	}
+
 	// 不设置域名，让浏览器自动处理
 	http.SetCookie(c.Writer, cookie)
+	fmt.Printf("✅ Cookie设置成功\n")
 
 	// 获取重定向地址
 	var frontendURL string
@@ -194,10 +230,17 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 	// 1. 优先从 session 中获取前端传递的 redirect 参数
 	session, err := gothic.Store.Get(r, "oauth_session")
 	if err == nil {
+		fmt.Printf("✅ 成功获取session\n")
+		fmt.Printf("Session所有值: %+v\n", session.Values)
 		if savedRedirectURL, ok := session.Values["redirect_url"].(string); ok && savedRedirectURL != "" {
 			frontendURL = savedRedirectURL
-			fmt.Printf("使用前端传递的redirect URL: %s\n", frontendURL)
+			fmt.Printf("✅ 从session获取到前端传递的redirect URL: %s\n", frontendURL)
+		} else {
+			fmt.Printf("❌ session中没有找到redirect_url或值为空\n")
+			fmt.Printf("redirect_url值类型: %T, 值: %v\n", session.Values["redirect_url"], session.Values["redirect_url"])
 		}
+	} else {
+		fmt.Printf("❌ 获取session失败: %v\n", err)
 	}
 
 	// 2. 如果没有 redirect 参数，优先从环境变量获取
@@ -214,6 +257,29 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 		fmt.Printf("使用默认前端URL: %s\n", frontendURL)
 	}
 
+	// 检查是否是React Native应用的深度链接
+	if strings.HasPrefix(frontendURL, "travelview://") {
+		fmt.Printf("🔗 检测到React Native深度链接\n")
+		// React Native 深度链接，构造参数
+		deepLink := frontendURL + "?token=" + url.QueryEscape(tokenString) + 
+			"&user_id=" + fmt.Sprintf("%d", userInDB.UserID) +
+			"&email=" + url.QueryEscape(userInDB.Email) +
+			"&name=" + url.QueryEscape(userInDB.Name)
+		
+		if userInDB.Avatar != "" {
+			deepLink += "&avatar=" + url.QueryEscape(userInDB.Avatar)
+		}
+		
+		fmt.Printf("构造的深度链接: %s\n", deepLink)
+		fmt.Printf("=== 重定向到React Native App ===\n\n")
+		
+		// 重定向到深度链接
+		c.Redirect(http.StatusFound, deepLink)
+		return
+	}
+
+	// Web应用处理
+	fmt.Printf("🌐 处理Web应用重定向\n")
 	// 确保URL以斜杠结尾
 	if !strings.HasSuffix(frontendURL, "/") {
 		frontendURL += "/"
@@ -223,12 +289,15 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 	frontendURL += "?token=" + url.QueryEscape(tokenString)
 
 	fmt.Printf("最终重定向到: %s\n", frontendURL)
+	fmt.Printf("=== getAuthCallbackFunction 成功完成 ===\n")
+	fmt.Printf("用户: %s (ID: %d) 通过OAuth登录成功\n\n", userInDB.Email, userInDB.UserID)
 
 	// 重定向到前端首页
 	c.Redirect(http.StatusFound, frontendURL)
 }
 
 func (s *Server) beginAuthProviderCallback(c *gin.Context) {
+	fmt.Printf("\n=== beginAuthProviderCallback 开始 ===\n")
 	provider := c.Param("provider")
 	ctx := context.WithValue(context.Background(), "provider", provider)
 	r := c.Request.WithContext(ctx)
@@ -236,27 +305,42 @@ func (s *Server) beginAuthProviderCallback(c *gin.Context) {
 
 	fmt.Printf("Begin Auth - Provider: %s\n", provider)
 	fmt.Printf("Begin Auth - Request Host: %s\n", r.Host)
+	fmt.Printf("Begin Auth - Request URL: %s\n", r.URL.String())
 	fmt.Printf("Begin Auth - Request Cookies: %v\n", r.Cookies())
+	fmt.Printf("Begin Auth - User-Agent: %s\n", r.Header.Get("User-Agent"))
+	fmt.Printf("Begin Auth - Referer: %s\n", r.Header.Get("Referer"))
 
 	// 获取前端传递的 redirect 参数
+	// 支持两种参数名：redirect 和 redirect_uri
 	redirectURL := c.Query("redirect")
+	if redirectURL == "" {
+		redirectURL = c.Query("redirect_uri")
+	}
+	fmt.Printf("接收到的redirect参数: %s\n", redirectURL)
+	fmt.Printf("原始查询字符串: %s\n", c.Request.URL.RawQuery)
+	
 	if redirectURL != "" {
-		fmt.Printf("前端传递的redirect参数: %s\n", redirectURL)
+		fmt.Printf("处理前端传递的redirect参数: %s\n", redirectURL)
 
 		// 将 redirect URL 保存到 session 中，以便在回调时使用
 		session, err := gothic.Store.Get(r, "oauth_session")
 		if err != nil {
-			fmt.Printf("无法获取session: %v\n", err)
+			fmt.Printf("❌ 无法获取session: %v\n", err)
 		} else {
 			session.Values["redirect_url"] = redirectURL
 			err = session.Save(r, w)
 			if err != nil {
-				fmt.Printf("无法保存session: %v\n", err)
+				fmt.Printf("❌ 无法保存session: %v\n", err)
 			} else {
-				fmt.Printf("成功保存redirect_url到session: %s\n", redirectURL)
+				fmt.Printf("✅ 成功保存redirect_url到session: %s\n", redirectURL)
 			}
 		}
+	} else {
+		fmt.Printf("无redirect参数，将使用默认重定向\n")
 	}
+
+	fmt.Printf("准备重定向到Google OAuth页面...\n")
+	fmt.Printf("=== beginAuthProviderCallback 结束 ===\n\n")
 
 	gothic.BeginAuthHandler(w, r)
 }
