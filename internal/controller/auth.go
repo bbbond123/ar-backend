@@ -19,8 +19,8 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
-	"golang.org/x/crypto/bcrypt"
 	"github.com/markbates/goth/gothic"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -67,27 +67,27 @@ type Claims struct {
 func Login(c *gin.Context) {
 	var req model.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, model.BaseResponse{Success: false, ErrMessage: err.Error()})
+		c.JSON(400, model.BaseResponse{Success: false, ErrMessage: err.Error(), Code: 400})
 		return
 	}
 	db := database.GetDB()
 	var user model.User
 	if err := db.Where("email = ?", req.Email).First(&user).Error; err != nil {
-		c.JSON(401, model.BaseResponse{Success: false, ErrMessage: "用户不存在"})
+		c.JSON(401, model.BaseResponse{Success: false, ErrMessage: "用户不存在", Code: 401})
 		return
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		c.JSON(401, model.BaseResponse{Success: false, ErrMessage: "密码错误"})
+		c.JSON(401, model.BaseResponse{Success: false, ErrMessage: "密码错误", Code: 401})
 		return
 	}
 	accessToken, err := generateAccessToken(user.UserID)
 	if err != nil {
-		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "Token生成失败"})
+		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "Token生成失败", Code: 500})
 		return
 	}
 	refreshToken, err := generateRefreshTokenJWT(user.UserID)
 	if err != nil {
-		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "RefreshToken生成失败"})
+		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "RefreshToken生成失败", Code: 500})
 		return
 	}
 	expiresAt := time.Now().Add(7 * 24 * time.Hour)
@@ -97,11 +97,12 @@ func Login(c *gin.Context) {
 		ExpiresAt:    expiresAt,
 		Revoked:      false,
 	}).Error; err != nil {
-		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "RefreshToken存储失败"})
+		c.JSON(500, model.BaseResponse{Success: false, ErrMessage: "RefreshToken存储失败", Code: 500})
 		return
 	}
 	c.JSON(200, model.Response[model.AuthResponse]{
 		Success: true,
+		Code:    200,
 		Data: model.AuthResponse{
 			User:         user,
 			AccessToken:  accessToken,

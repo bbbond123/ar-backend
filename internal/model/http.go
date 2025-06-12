@@ -98,6 +98,7 @@ type Error504 struct {
 
 // BaseResponse 通用返回（无data时使用）
 type BaseResponse struct {
+	Code       int    `json:"code"`                 // 状态码
 	Success    bool   `json:"success"`              // 请求是否成功
 	ErrCode    string `json:"errCode,omitempty"`    // 错误码
 	ErrMessage string `json:"errMessage,omitempty"` // 错误信息
@@ -106,6 +107,7 @@ type BaseResponse struct {
 // Response 通用返回（带data时使用）
 type Response[T any] struct {
 	Data       T      `json:"data"`                 // 数据
+	Code       int    `json:"code"`                 // 状态码
 	Success    bool   `json:"success"`              // 请求是否成功
 	ErrCode    string `json:"errCode,omitempty"`    // 错误码
 	ErrMessage string `json:"errMessage,omitempty"` // 错误信息
