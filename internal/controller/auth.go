@@ -607,7 +607,7 @@ func BeginGoogleAuth(c *gin.Context) {
 		redirectURL = c.Query("redirect_uri")
 	}
 	fmt.Printf("接收到的redirect参数: %s\n", redirectURL)
-	fmt.Printf("原始查询字符串: %s\n", c.Request.URL.RawQuery)
+	fmt.Printf("1111原始查询字符串: %s\n", c.Request.URL.RawQuery)
 	
 	if redirectURL != "" {
 		fmt.Printf("BeginGoogleAuth - 处理redirect参数: %s\n", redirectURL)
