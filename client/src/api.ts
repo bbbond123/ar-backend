@@ -8,7 +8,7 @@ export async function fetchMe() {
     headers["Authorization"] = `Bearer ${token}`;
   }
   
-  const res = await fetch("/api/me", {
+  const res = await fetch("/api/users/me", {
     credentials: "include", // 关键！带上 cookie
     headers,
   });
@@ -17,7 +17,7 @@ export async function fetchMe() {
 }
 
 export async function logout() {
-  await fetch("/api/logout", {
+  await fetch("/api/auth/logout", {
     method: "POST",
     credentials: "include",
   });
