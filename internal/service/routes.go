@@ -96,7 +96,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	r.GET("/api/auth/:provider", s.beginAuthProviderCallback)
 	r.GET("/api/auth/:provider/callback", s.getAuthCallbackFunction)
-	r.GET("/api/me", s.MeHandler)
+	r.GET("/api/users/me", s.MeHandler)
 
 	// r.POST("/api/logout", s.LogoutHandler)
 	// Swagger 文档
@@ -397,12 +397,20 @@ func (s *Server) MeHandler(c *gin.Context) {
 	}
 	fmt.Printf("用户查询成功: %s\n", user.Email)
 
-	c.JSON(http.StatusOK, gin.H{
-		"user_id":  user.UserID,
-		"email":    user.Email,
-		"name":     user.Name,
-		"avatar":   user.Avatar,
-		"provider": user.Provider,
+	// c.JSON(200, model.Response[model.AuthResponse]{
+	// 	Success: true,
+	// 	Code:    200,
+	// 	Data: model.AuthResponse{
+	// 		User:         user,
+	// 		AccessToken:  accessToken,
+	// 		RefreshToken: refreshToken,
+	// 	},
+	// })
+
+	c.JSON(http.StatusOK, model.Response[model.User]{
+		Success: true,
+		Code:    200,
+		Data:    user,
 	})
 }
 
