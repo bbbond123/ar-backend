@@ -317,7 +317,7 @@ func (s *Server) beginAuthProviderCallback(c *gin.Context) {
 		redirectURL = c.Query("redirect_uri")
 	}
 	fmt.Printf("接收到的redirect参数: %s\n", redirectURL)
-	fmt.Printf("原始查询字符串: %s\n", c.Request.URL.RawQuery)
+	fmt.Printf("2222原始查询字符串: %s\n", c.Request.URL.RawQuery)
 	
 	if redirectURL != "" {
 		fmt.Printf("处理前端传递的redirect参数: %s\n", redirectURL)
