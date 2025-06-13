@@ -120,55 +120,20 @@ echo "✅ 目录创建完成"
 
 if [ "$BACKEND_ONLY" = false ]; then
     echo ""
-    echo "🔨 开始前端构建..."
+    echo "🔍 检查前端目录..."
     
     # 检查前端目录
-    if [ ! -d "client" ]; then
-        echo "❌ 错误: client 目录不存在"
+    if [ ! -d "client/dist" ]; then
+        echo "❌ 错误: client/dist 目录不存在"
+        exit 1
+    fi
+
+    if [ ! -d "admin/dist" ]; then
+        echo "❌ 错误: admin/dist 目录不存在"
         exit 1
     fi
     
-    # 进入前端目录
-    cd client
-    
-    # 检查 package.json
-    if [ ! -f "package.json" ]; then
-        echo "❌ 错误: package.json 文件不存在"
-        exit 1
-    fi
-    
-    # 安装或更新前端依赖
-    echo "📦 检查并安装前端依赖..."
-    if [ ! -d "node_modules" ]; then
-        echo "首次安装前端依赖..."
-        npm install
-    else
-        echo "更新前端依赖..."
-        npm install
-    fi
-    
-    # 构建前端应用
-    echo "🏗️ 编译前端代码..."
-    npm run build
-    
-    # 验证构建结果
-    if [ ! -d "dist" ]; then
-        echo "❌ 前端构建失败，未找到 dist 目录"
-        echo "请检查前端构建日志"
-        exit 1
-    fi
-    
-    # 检查构建文件
-    if [ ! -f "dist/index.html" ]; then
-        echo "❌ 前端构建不完整，缺少 index.html"
-        exit 1
-    fi
-    
-    echo "✅ 前端构建完成"
-    echo "📁 构建文件位置: ./client/dist/"
-    
-    # 返回根目录
-    cd ..
+    echo "✅ 前端目录检查完成"
 fi
 
 # 如果只是前端更新，直接重启 nginx 并退出
@@ -187,8 +152,12 @@ if [ "$FRONTEND_ONLY" = true ]; then
     
     echo ""
     echo "🎉 前端更新完成！"
-    echo "📍 静态文件位置: ./client/dist/"
-    echo "🌐 访问地址: https://www.ifoodme.com"
+    echo "📍 静态文件位置:"
+    echo "  - 客户端: ./client/dist/"
+    echo "  - 管理后台: ./admin/dist/"
+    echo "🌐 访问地址:"
+    echo "  - 客户端: https://www.ifoodme.com"
+    echo "  - 管理后台: https://www.ifoodme.com/admin"
     exit 0
 fi
 
