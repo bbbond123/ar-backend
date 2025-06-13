@@ -60,6 +60,8 @@ backups/
 # Build artifacts
 ar-backend
 /dist/
+/client/dist/
+/admin/dist/
 
 # Config files with sensitive data
 config.local.yaml
