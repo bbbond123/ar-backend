@@ -86,3 +86,25 @@ export async function getArticle(articleId: number) {
 
   return response.json();
 }
+
+export const getUserInfo = async () => {
+  try {
+    const response = await fetch('/api/user/me', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('获取用户信息失败');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('获取用户信息错误:', error);
+    throw error;
+  }
+};
