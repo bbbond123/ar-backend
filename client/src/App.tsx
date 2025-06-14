@@ -159,75 +159,77 @@ function App() {
             发布文章
           </button>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <a
-            href="/swagger/index.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              padding: '0.5rem 1rem',
-              border: '1px solid #28a745',
-              background: 'transparent',
-              color: '#28a745',
-              borderRadius: '4px',
-              textDecoration: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
-          >
-            <span role="img" aria-label="swagger">📚</span>
-            API文档
-          </a>
-          <a
-            href="/admin"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              padding: '0.5rem 1rem',
-              border: '1px solid #dc3545',
-              background: 'transparent',
-              color: '#dc3545',
-              borderRadius: '4px',
-              textDecoration: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
-          >
-            <span role="img" aria-label="admin">⚙️</span>
-            管理后台
-          </a>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <span>欢迎, {user.name || user.email}</span>
-          {user.avatar && (
-            <img
-              src={user.avatar || "https://www.gravatar.com/avatar/?d=mp"}
-              alt="avatar"
-              width={32}
-              height={32}
-              style={{ borderRadius: '50%' }}
-              referrerPolicy="no-referrer"
+        
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <a
+              href="/swagger/index.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                padding: '0.5rem 1rem',
+                border: '1px solid #28a745',
+                background: 'transparent',
+                color: '#28a745',
+                borderRadius: '4px',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              <span role="img" aria-label="swagger">📚</span>
+              API文档
+            </a>
+            <a
+              href="/admin"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                padding: '0.5rem 1rem',
+                border: '1px solid #dc3545',
+                background: 'transparent',
+                color: '#dc3545',
+                borderRadius: '4px',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              <span role="img" aria-label="admin">⚙️</span>
+              管理后台
+            </a>
+          </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <span>欢迎, {user.name || user.email}</span>
+            <img 
+              src={user.avatar} 
+              alt="用户头像" 
+              style={{ 
+                width: '32px', 
+                height: '32px', 
+                borderRadius: '50%' 
+              }} 
             />
-          )}
-          <button
-            onClick={async () => {
-              await logout();
-              localStorage.removeItem("access_token");
-              setUser(null);
-            }}
-            style={{
-              padding: '0.5rem 1rem',
-              border: '1px solid #dc3545',
-              background: 'white',
-              color: '#dc3545',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            退出登录
-          </button>
+            <button
+              onClick={async () => {
+                await logout();
+                setUser(null);
+              }}
+              style={{
+                padding: '0.5rem 1rem',
+                border: '1px solid #dc3545',
+                background: 'transparent',
+                color: '#dc3545',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              退出登录
+            </button>
+          </div>
         </div>
       </nav>
 
