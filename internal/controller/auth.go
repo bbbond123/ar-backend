@@ -644,10 +644,18 @@ func BeginGoogleAuth(c *gin.Context) {
 // @Success 302 {string} string "重定向到前端页面，并携带 token"
 // @Router /api/auth/google/callback [get]
 func GoogleAuthCallback(c *gin.Context) {
-	fmt.Printf("\n=== GoogleAuthCallback 开始 ===\n")
+	fmt.Printf("\n=== hahah GoogleAuthCallback 开始 ===\n")
 	fmt.Printf("请求IP: %s\n", c.ClientIP())
 	fmt.Printf("User-Agent: %s\n", c.GetHeader("User-Agent"))
 	fmt.Printf("查询参数: %s\n", c.Request.URL.RawQuery)
+
+	// 添加OAuth参数的详细日志
+	fmt.Printf("=== OAuth回调参数详情 ===\n")
+	fmt.Printf("State参数: %s\n", c.Query("state"))
+	fmt.Printf("Code参数: %s\n", c.Query("code"))
+	fmt.Printf("Scope参数: %s\n", c.Query("scope"))
+	fmt.Printf("Error参数: %s\n", c.Query("error"))
+	fmt.Printf("========================\n")
 
 	provider := "google"
 	ctx := context.WithValue(context.Background(), "provider", provider)
@@ -655,6 +663,7 @@ func GoogleAuthCallback(c *gin.Context) {
 	w := c.Writer
 
 	fmt.Printf("开始完成Google OAuth认证...\n")
+	fmt.Printf("即将调用gothic.CompleteUserAuth()，这会消费state和code参数\n")
 	user, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
 		fmt.Printf("❌ Google OAuth认证失败: %v\n", err)
@@ -663,6 +672,7 @@ func GoogleAuthCallback(c *gin.Context) {
 	}
 
 	fmt.Printf("✅ Google OAuth认证成功\n")
+	fmt.Printf("state和code参数已被gothic库验证和消费\n")
 	fmt.Printf("Google用户信息 - Email: %s, Name: %s, UserID: %s\n", user.Email, user.Name, user.UserID)
 	fmt.Printf("Avatar: %s, Provider: %s\n", user.AvatarURL, user.Provider)
 
@@ -784,7 +794,7 @@ func GoogleAuthCallback(c *gin.Context) {
 
 	// 检查是否是React Native应用的深度链接
 	if strings.HasPrefix(frontendURL, "travelview://") {
-		fmt.Printf("🔗 检测到React Native深度链接\n")
+		fmt.Printf("🔗 BBBBB检测到React Native深度链接\n")
 		// React Native 深度链接，构造参数
 		deepLink := frontendURL + "?token=" + url.QueryEscape(tokenString) +
 			"&user_id=" + fmt.Sprintf("%d", userInDB.UserID) +

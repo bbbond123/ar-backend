@@ -259,7 +259,7 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 
 	// 检查是否是React Native应用的深度链接
 	if strings.HasPrefix(frontendURL, "travelview://") {
-		fmt.Printf("🔗 检测到React Native深度链接\n")
+		fmt.Printf("🔗 AAAA 检测到React Native深度链接\n")
 		// React Native 深度链接，构造参数
 		deepLink := frontendURL + "?token=" + url.QueryEscape(tokenString) +
 			"&user_id=" + fmt.Sprintf("%d", userInDB.UserID) +
