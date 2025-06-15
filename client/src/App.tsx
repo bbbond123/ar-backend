@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchMe, logout } from "./api";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
+// import reactLogo from "./assets/react.svg";
+// import viteLogo from "/vite.svg";
 import GoogleLoginButton from "./components/GoogleLoginButton";
 import ArticleUpload from "./components/ArticleUpload";
 import ArticleList from "./components/ArticleList";
