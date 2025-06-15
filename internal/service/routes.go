@@ -114,7 +114,7 @@ func (s *Server) healthHandler(c *gin.Context) {
 }
 
 func (s *Server) getAuthCallbackFunction(c *gin.Context) {
-	fmt.Printf("\n=== getAuthCallbackFunction 开始 ===\n")
+	fmt.Printf("\n=== GGG getAuthCallbackFunction 开始 ===\n")
 	provider := c.Param("provider")
 	ctx := context.WithValue(context.Background(), "provider", provider)
 	r := c.Request.WithContext(ctx)
@@ -135,11 +135,11 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 		c.String(http.StatusUnauthorized, "auth error: %v", err)
 		return
 	}
-	
+
 	fmt.Printf("✅ Gothic OAuth认证成功\n")
 	fmt.Printf("获取到的用户信息 - Email: %s, Name: %s, UserID: %s\n", user.Email, user.Name, user.UserID)
 	fmt.Printf("Avatar: %s, Provider: %s\n", user.AvatarURL, user.Provider)
-	
+
 	var userInDB model.User
 	err = s.gormDB.Where("email = ?", user.Email).First(&userInDB).Error
 	if err == gorm.ErrRecordNotFound {
@@ -177,9 +177,9 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 		c.String(http.StatusInternalServerError, "Database error")
 		return
 	}
-	
+
 	fmt.Printf("开始生成JWT Token - UserID: %d\n", userInDB.UserID)
-	
+
 	// 生成 JWT
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userInDB.UserID,
@@ -194,7 +194,7 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 		c.String(http.StatusInternalServerError, "Could not create token")
 		return
 	}
-	
+
 	fmt.Printf("✅ JWT Token生成成功，长度: %d\n", len(tokenString))
 
 	// 设置 Cookie
@@ -261,18 +261,20 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 	if strings.HasPrefix(frontendURL, "travelview://") {
 		fmt.Printf("🔗 检测到React Native深度链接\n")
 		// React Native 深度链接，构造参数
-		deepLink := frontendURL + "?token=" + url.QueryEscape(tokenString) + 
+		deepLink := frontendURL + "?token=" + url.QueryEscape(tokenString) +
 			"&user_id=" + fmt.Sprintf("%d", userInDB.UserID) +
 			"&email=" + url.QueryEscape(userInDB.Email) +
-			"&name=" + url.QueryEscape(userInDB.Name)
-		
+			"&name=" + url.QueryEscape(userInDB.Name) +
+			"&code=" + url.QueryEscape(r.URL.Query().Get("code")) +
+			"&state=" + url.QueryEscape(r.URL.Query().Get("state"))
+
 		if userInDB.Avatar != "" {
 			deepLink += "&avatar=" + url.QueryEscape(userInDB.Avatar)
 		}
-		
+
 		fmt.Printf("构造的深度链接: %s\n", deepLink)
-		fmt.Printf("=== 重定向到React Native App ===\n\n")
-		
+		fmt.Printf("=== RRR 重定向到React Native App ===\n\n")
+
 		// 重定向到深度链接
 		c.Redirect(http.StatusFound, deepLink)
 		return
@@ -297,7 +299,7 @@ func (s *Server) getAuthCallbackFunction(c *gin.Context) {
 }
 
 func (s *Server) beginAuthProviderCallback(c *gin.Context) {
-	fmt.Printf("\n=== beginAuthProviderCallback 开始 ===\n")
+	fmt.Printf("\n=== X beginAuthProviderCallback 开始 ===\n")
 	provider := c.Param("provider")
 	ctx := context.WithValue(context.Background(), "provider", provider)
 	r := c.Request.WithContext(ctx)
@@ -318,7 +320,7 @@ func (s *Server) beginAuthProviderCallback(c *gin.Context) {
 	}
 	fmt.Printf("接收到的redirect参数: %s\n", redirectURL)
 	fmt.Printf("2222原始查询字符串: %s\n", c.Request.URL.RawQuery)
-	
+
 	if redirectURL != "" {
 		fmt.Printf("处理前端传递的redirect参数: %s\n", redirectURL)
 
