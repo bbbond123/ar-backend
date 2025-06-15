@@ -382,7 +382,7 @@ func getGoogleUserInfo(idToken string) (*GoogleUserInfo, error) {
 	fmt.Printf("允许的Client IDs: %v\n", validClientIDs)
 
 	tokenInfoURL := "https://oauth2.googleapis.com/tokeninfo?id_token=" + idToken
-	fmt.Printf("请求Google Token验证URL: %s\n", tokenInfoURL[:100]+"...")
+	fmt.Printf("9898989  请求Google Token验证URL: %s\n", tokenInfoURL[:100]+"...")
 
 	resp, err := http.Get(tokenInfoURL)
 	if err != nil {
